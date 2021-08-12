@@ -1,0 +1,30 @@
+serverIndex: -1
+# Available: BOX, TDM
+serverType: null
+
+resourcePack:
+  url: https://drive.google.com/uc?export=download&id=14iEWROIPNm0nEFnmzQC71OnQLHcy-uLm
+  hash: FDEE47ADBB6AA23A7A7A8F6E9F92D38162729CDB
+
+pvpLocation: world -94 91 32 -90 0
+
+rankingHolograms:
+  totalKills: world -147.5 7.5 -318
+
+safeZone:
+  ==: fr.olympa.api.spigot.region.shapes.ExpandedCuboid
+  world: "world"
+  xMin: -220
+  zMin: -340
+  xMax: -75
+  zMax: -220
+ 
+killbox:
+  ==: fr.olympa.api.spigot.region.shapes.Cuboid
+  world: "world"
+  xMin: -168
+  yMin: 55
+  zMin: 59
+  xMax: -139
+  yMax: 80
+  zMax: 171

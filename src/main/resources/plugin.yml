@@ -1,0 +1,6 @@
+name: OlympaWarfare
+author: SkytAsul
+version: @plugin_version@
+api-version: 1.16
+depend: [OlympaCore]
+main: fr.olympa.warfare.OlympaWarfare
