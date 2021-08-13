@@ -1,12 +1,17 @@
 package fr.olympa.warfare.teamdeathmatch;
 
+import java.util.Arrays;
+
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.scheduler.BukkitTask;
 
-import fr.olympa.api.spigot.item.ItemUtils;
 import fr.olympa.api.utils.Prefix;
 
 public class WaitingGameState extends GameState {
@@ -24,8 +29,7 @@ public class WaitingGameState extends GameState {
 		int online = Bukkit.getOnlinePlayers().size();
 		updateCountdown(online);
 		e.setJoinMessage(e.getJoinMessage() + getOnlineString(online));
-		e.getPlayer().getInventory().setItem(3, ItemUtils.item(Material.BLUE_DYE, "§7Rejoindre l'équipe §8§lbleue"));
-		e.getPlayer().getInventory().setItem(5, ItemUtils.item(Material.RED_DYE, "§7Rejoindre l'équipe §c§lrouge"));
+		for (Team team : Team.values()) e.getPlayer().getInventory().setItem(team.getSlot(), team.getItem());
 	}
 	
 	@Override
@@ -33,6 +37,25 @@ public class WaitingGameState extends GameState {
 		int online = Bukkit.getOnlinePlayers().size() - 1;
 		updateCountdown(online);
 		e.setQuitMessage(e.getQuitMessage() + getOnlineString(online));
+		Team team = Team.getPlayerTeam(e.getPlayer());
+		if (team != null) team.removePlayer(e.getPlayer());
+	}
+	
+	@EventHandler
+	public void onInteract(PlayerInteractEvent e) {
+		if (e.getHand() != EquipmentSlot.HAND) return;
+		if (e.getAction() != Action.RIGHT_CLICK_AIR && e.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+		if (e.getItem() == null) return;
+		Player p = e.getPlayer();
+		int slot = p.getInventory().getHeldItemSlot();
+		Team chosen = Arrays.stream(Team.values()).filter(x -> x.getSlot() == slot).findAny().orElse(null);
+		if (chosen != null) {
+			Team oldTeam = Team.getPlayerTeam(p);
+			if (oldTeam != null) oldTeam.removePlayer(p);
+			chosen.addPlayer(p);
+			tdm.teamChanged(p);
+			e.setCancelled(true);
+		}
 	}
 	
 	public String getOnlineString(int online) {

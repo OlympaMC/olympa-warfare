@@ -1,10 +1,10 @@
 package fr.olympa.warfare.weapons.guns;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -13,6 +13,7 @@ import org.bukkit.potion.PotionEffectType;
 
 import fr.olympa.api.spigot.utils.SpigotUtils;
 import fr.olympa.warfare.OlympaWarfare;
+import fr.olympa.warfare.weapons.ItemStackable;
 import fr.olympa.warfare.weapons.ZTASound;
 import fr.olympa.warfare.weapons.guns.AttributeModifier.Operation;
 import fr.olympa.warfare.weapons.guns.Gun.GunAccuracy;
@@ -23,7 +24,7 @@ import fr.olympa.warfare.weapons.guns.bullets.BulletEffect.BulletEffectCreator;
 import fr.olympa.warfare.weapons.guns.bullets.BulletExplosive;
 import fr.olympa.warfare.weapons.guns.bullets.BulletSimple;
 
-public enum GunType {
+public enum GunType implements ItemStackable {
 	
 	REM_870(
 			"Remington 870 Express",
@@ -211,7 +212,7 @@ public enum GunType {
 			null),
 	KSG(
 			"Kel-Tec KSG",
-			"Fustil de combat rapproché, peu dommageant pour les joueurs mais efficace lors de mêlées d'infectés grâce à ses deux tubes de munitions.",
+			"Fustil de combat rapproché, dommageant lors des mêlées grâce à ses deux tubes de munitions.",
 			2,
 			Material.IRON_SHOVEL,
 			AmmoType.CARTRIDGE,
@@ -349,7 +350,7 @@ public enum GunType {
 			null),
 	SDMR(
 			"SDM-R",
-			"Fustil de précision dérivé du M16 pouvant être facilement modifié.",
+			"Fustil de précision dérivé du M16.",
 			4,
 			Material.IRON_PICKAXE,
 			AmmoType.HEAVY,
@@ -502,8 +503,14 @@ public enum GunType {
 		demoItem.setItemMeta(meta);
 	}
 	
+	@Override
 	public String getName() {
 		return name;
+	}
+	
+	@Override
+	public String getId() {
+		return name();
 	}
 	
 	public String getDescription() {
@@ -640,18 +647,15 @@ public enum GunType {
 		return heldEffect != null;
 	}
 	
+	@Override
 	public ItemStack getDemoItem() {
 		return demoItem;
 	}
 	
-	public ItemStack createItem() {
-		try {
-			Gun gun = OlympaWarfare.getInstance().gunRegistry.createGun(this);
-			return gun.createItemStack();
-		}catch (SQLException e) {
-			e.printStackTrace();
-			return null;
-		}
+	@Override
+	public void giveItems(Player p) {
+		Gun gun = OlympaWarfare.getInstance().gunRegistry.createGun(this);
+		p.getInventory().addItem(gun.createItemStack());
 	}
 	
 	public List<String> getLore(){

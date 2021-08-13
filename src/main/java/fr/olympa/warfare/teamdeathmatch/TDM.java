@@ -2,10 +2,12 @@ package fr.olympa.warfare.teamdeathmatch;
 
 import java.util.function.Function;
 
-import org.bukkit.Bukkit;
-import org.bukkit.event.HandlerList;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventPriority;
 import org.spigotmc.SpigotConfig;
 
+import fr.olympa.core.spigot.OlympaCore;
+import fr.olympa.warfare.OlympaPlayerWarfare;
 import fr.olympa.warfare.OlympaWarfare;
 
 public class TDM {
@@ -18,6 +20,11 @@ public class TDM {
 		this.plugin = plugin;
 		setState(WaitingGameState::new);
 		SpigotConfig.disablePlayerDataSaving = true;
+		
+		OlympaCore.getInstance().getNameTagApi().addNametagHandler(EventPriority.HIGH, (nametag, player, to) -> {
+			Team team = Team.getPlayerTeam((Player) player.getPlayer());
+			if (team != null) nametag.appendPrefix(team.getColor().toString());
+		});
 	}
 	
 	public OlympaWarfare getPlugin() {
@@ -29,13 +36,17 @@ public class TDM {
 	}
 	
 	public void setState(Function<TDM, GameState> stateProvider) {
-		if (state != null) HandlerList.unregisterAll(state);
+		if (state != null) state.stop();
 		state = stateProvider.apply(this);
-		Bukkit.getPluginManager().registerEvents(state, plugin);
+		state.start();
 	}
 	
 	public int getMinPlayers() {
 		return 6;
+	}
+	
+	public void teamChanged(Player p) {
+		OlympaCore.getInstance().getNameTagApi().callNametagUpdate(OlympaPlayerWarfare.get(p));
 	}
 	
 }

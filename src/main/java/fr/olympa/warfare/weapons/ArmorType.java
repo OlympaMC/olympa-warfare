@@ -10,52 +10,52 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import fr.olympa.api.spigot.item.ImmutableItemStack;
 
-public enum ArmorType {
-	CIVIL("Tenue civile", "LEATHER", "Bandana", "Veste", "Jeans", "Baskets", true),
-	GANGSTER("Tenue de gangster", "GOLDEN", "Cagoule en Kevlar", "Veste en Kevlar", "Pantalon en Kevlar", "Chaussures en Kevlar", true, Enchantment.PROTECTION_PROJECTILE, 1),
-	ANTIRIOT("Armure anti-émeutes", "CHAINMAIL", "Casque anti-émeutes", "Plastron anti-émeutes", "Jambières anti-émeutes", "Bottes anti-émeutes", true, Enchantment.PROTECTION_ENVIRONMENTAL, 1),
-	MILITARY("Armure en Kevlar renforcé", "IRON", "Casque en Kevlar renforcé", "Plastron en Kevlar renforcé", "Jambières en Kevlar renforcé", "Bottes en Kevlar renforcé", false, Enchantment.PROTECTION_PROJECTILE, 1);
+public enum ArmorType implements ItemStackable {
+	P1PP1(
+			"GOLDEN",
+			"Double protection",
+			Enchantment.PROTECTION_ENVIRONMENTAL,
+			Enchantment.PROTECTION_PROJECTILE),
+	PP1(
+			"GOLDEN",
+			"Protection",
+			Enchantment.PROTECTION_PROJECTILE),
+			;
 
-	private String name;
-	private String type;
-	private boolean unbreakable;
-	private Enchantment enchantment;
-	private int level;
 	private ImmutableItemStack helmet;
 	private ImmutableItemStack chestplate;
 	private ImmutableItemStack leggings;
 	private ImmutableItemStack boots;
+	private String name;
 
-	private ArmorType(String name, String type, String helmet, String chestplate, String leggings, String boots, boolean unbreakable) {
-		this(name, type, helmet, chestplate, leggings, boots, unbreakable, null, 0);
-	}
-
-	private ArmorType(String name, String type, String helmet, String chestplate, String leggings, String boots, boolean unbreakable, Enchantment enchantment, int level) {
+	private ArmorType(String type, String name, Enchantment... enchantments) {
 		this.name = name;
-		this.type = type;
-		this.unbreakable = unbreakable;
-		this.enchantment = enchantment;
-		this.level = level;
-		this.helmet = createItem(ArmorSlot.HELMET, helmet);
-		this.chestplate = createItem(ArmorSlot.CHESTPLATE, chestplate);
-		this.leggings = createItem(ArmorSlot.LEGGINGS, leggings);
-		this.boots = createItem(ArmorSlot.BOOTS, boots);
+		this.helmet = createItem(ArmorSlot.HELMET, "Casque", type, enchantments);
+		this.chestplate = createItem(ArmorSlot.CHESTPLATE, "Veste", type, enchantments);
+		this.leggings = createItem(ArmorSlot.LEGGINGS, "Jambières", type, enchantments);
+		this.boots = createItem(ArmorSlot.BOOTS, "Bottes", type, enchantments);
 	}
 
-	public String getName() {
-		return name;
-	}
-
-	private ImmutableItemStack createItem(ArmorSlot slot, String name) {
+	private ImmutableItemStack createItem(ArmorSlot slot, String name, String type, Enchantment... enchantments) {
 		ItemStack item = new ItemStack(Material.valueOf(type + "_" + slot.name()));
 		ItemMeta meta = item.getItemMeta();
 		meta.setDisplayName("§b" + name);
-		meta.setUnbreakable(unbreakable);
-		if (enchantment != null) meta.addEnchant(enchantment, level, true);
+		meta.setUnbreakable(true);
+		for (Enchantment enchantment : enchantments) meta.addEnchant(enchantment, 1, true);
 		item.setItemMeta(meta);
 		return new ImmutableItemStack(item);
 	}
 
+	@Override
+	public String getId() {
+		return name();
+	}
+	
+	@Override
+	public String getName() {
+		return name;
+	}
+	
 	public ImmutableItemStack getImmutable(ArmorSlot slot) {
 		return switch (slot) {
 		case BOOTS -> boots;
@@ -75,6 +75,16 @@ public enum ArmorType {
 		inv.setChestplate(getImmutable(ArmorSlot.CHESTPLATE));
 		inv.setLeggings(getImmutable(ArmorSlot.LEGGINGS));
 		inv.setBoots(getImmutable(ArmorSlot.BOOTS));
+	}
+	
+	@Override
+	public ItemStack getDemoItem() {
+		return helmet.toMutableStack();
+	}
+	
+	@Override
+	public void giveItems(Player p) {
+		setFull(p);
 	}
 
 	public enum ArmorSlot {

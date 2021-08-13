@@ -1,6 +1,5 @@
 package fr.olympa.warfare.weapons.guns;
 
-import java.sql.SQLException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -52,7 +51,7 @@ public class GunRegistry {
 		if (gun != null) consumer.accept(gun);
 	}
 	
-	public synchronized Gun createGun(GunType type) throws SQLException {
+	public synchronized Gun createGun(GunType type) {
 		int id = lastID++;
 		Gun gun = new Gun(id, type);
 		registry.put(id, gun);

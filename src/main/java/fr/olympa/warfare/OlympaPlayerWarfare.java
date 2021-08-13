@@ -15,7 +15,7 @@ import fr.olympa.api.common.provider.AccountProviderAPI;
 import fr.olympa.api.common.provider.OlympaPlayerObject;
 import fr.olympa.api.common.sql.SQLColumn;
 import fr.olympa.core.spigot.OlympaCore;
-import fr.olympa.warfare.kits.Kit;
+import fr.olympa.warfare.kits.Kits;
 import fr.olympa.warfare.xp.LevelManagement;
 import fr.olympa.warfare.xp.XPManagement;
 
@@ -31,7 +31,7 @@ public class OlympaPlayerWarfare extends OlympaPlayerObject {
 	private ObservableDouble xp = new ObservableDouble(0);
 	private ObservableInt kills = new ObservableInt(0);
 
-	private Kit usedKit = null;
+	public Kits usedKit = null;
 
 	public OlympaPlayerWarfare(UUID uuid, String name, String ip) {
 		super(uuid, name, ip);
@@ -79,19 +79,6 @@ public class OlympaPlayerWarfare extends OlympaPlayerObject {
 
 	public ObservableInt getKills() {
 		return kills;
-	}
-
-	public boolean isInPvPZone() {
-		return usedKit != null;
-	}
-
-	public Kit getUsedKit() {
-		return usedKit;
-	}
-
-	public void setInPvPZone(Kit usedKit) {
-		this.usedKit = usedKit;
-		OlympaWarfare.getInstance().lineKit.updateHolder(OlympaWarfare.getInstance().scoreboards.getPlayerScoreboard(this));
 	}
 
 	@Override

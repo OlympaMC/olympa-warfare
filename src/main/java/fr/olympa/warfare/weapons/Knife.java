@@ -18,14 +18,24 @@ import fr.olympa.api.spigot.utils.SpigotUtils;
 
 public enum Knife implements Weapon, ItemStackable {
 	
-	BATTE(Material.BLAZE_ROD, "Batte de base-ball", "Arme contondante, peu puissante contre les joueurs, utile pour se défendre contre les infectés.", 2, 3),
+	BATTE(
+			Material.BLAZE_ROD,
+			"Batte de base-ball",
+			"Arme contondante.",
+			3,
+			3),
 	BICHE(
 			Material.ARROW,
 			"Pied-de-biche",
 			"Objet polyvalent contre les joueurs comme contre les infectés.",
 			3,
 			4),
-	SURIN(Material.STICK, "Surin", "Couteau perforant, occasionnant plus de dégâts chez les joueurs que chez les infectés.", 4, 2),
+	SURIN(
+			Material.STICK,
+			"Surin",
+			"Couteau perforant.",
+			4,
+			2),
 	;
 	
 	public static final BlockData BLOOD_DATA = Material.REDSTONE_BLOCK.createBlockData();
@@ -62,8 +72,13 @@ public enum Knife implements Weapon, ItemStackable {
 	}
 	
 	@Override
-	public ItemStack createItem() {
+	public ItemStack getDemoItem() {
 		return item.clone();
+	}
+	
+	@Override
+	public void giveItems(Player p) {
+		p.getInventory().addItem(item.clone());
 	}
 	
 	public boolean isItem(ItemStack item) {
@@ -71,7 +86,7 @@ public enum Knife implements Weapon, ItemStackable {
 	}
 	
 	public ItemStack getSkinItem(Skin skin) {
-		ItemStack item = createItem();
+		ItemStack item = this.item.clone();
 		setSkin(skin, item);
 		return item;
 	}

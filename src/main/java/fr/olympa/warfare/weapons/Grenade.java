@@ -1,5 +1,8 @@
 package fr.olympa.warfare.weapons;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -17,24 +20,30 @@ import fr.olympa.core.spigot.OlympaCore;
 import fr.olympa.warfare.OlympaWarfare;
 import fr.olympa.warfare.weapons.guns.GunFlag;
 
-public enum Grenade implements Weapon, ItemStackable {
+public class Grenade implements Weapon, ItemStackable, Cloneable {
 	
-	GRENADE(Material.BLACK_DYE, "Grenade", "Engin explosif détonant quelques secondes après l'avoir lancée."),
-	;
+	public static final Grenade GRENADE = new Grenade(1, Material.BLACK_DYE, "Grenade", "Engin explosif détonant quelques secondes après l'avoir lancée.");
+	public static final Map<Integer, Grenade> GRENADES = new HashMap<>();
 	
+	private final int id;
 	private final String name;
 	private final ItemStack item;
 	
-	private Grenade(Material material, String name, String description) {
+	private int amount = 0;
+	
+	private Grenade(int id, Material material, String name, String description) {
+		this.id = id;
 		this.name = name;
 		
 		item = new ItemStack(material);
 		ItemMeta meta = item.getItemMeta();
 		meta.setDisplayName("§c" + name);
 		meta.setLore(SpigotUtils.wrapAndAlign(description, 35));
-		meta.getPersistentDataContainer().set(WeaponsListener.GRENADE_KEY, PersistentDataType.INTEGER, ordinal());
+		meta.getPersistentDataContainer().set(WeaponsListener.GRENADE_KEY, PersistentDataType.INTEGER, id);
 		meta.setCustomModelData(1);
 		item.setItemMeta(meta);
+		
+		GRENADES.put(id, this);
 	}
 	
 	@Override
@@ -44,18 +53,39 @@ public enum Grenade implements Weapon, ItemStackable {
 	
 	@Override
 	public String getId() {
-		return name();
+		return "grenade" + id;
 	}
 	
 	@Override
-	public ItemStack createItem() {
+	public ItemStack getDemoItem() {
 		return item.clone();
+	}
+	
+	@Override
+	public void giveItems(Player p) {
+		p.getInventory().addItem(get(amount));
 	}
 
 	public ItemStack get(int amount) {
 		ItemStack item = this.item.clone();
 		item.setAmount(amount);
 		return item;
+	}
+	
+	public Grenade toAmount(int amount) {
+		Grenade grenade = clone();
+		grenade.amount = amount;
+		return grenade;
+	}
+	
+	@Override
+	protected Grenade clone() {
+		try {
+			return (Grenade) super.clone();
+		}catch (CloneNotSupportedException e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 	
 	@Override
@@ -77,7 +107,7 @@ public enum Grenade implements Weapon, ItemStackable {
 			Bukkit.getScheduler().runTaskLater(OlympaWarfare.getInstance(), () -> {
 				itemEntity.remove();
 				p.getWorld().createExplosion(itemEntity.getLocation(), 4.5f, false, false, p);
-			}, 65);
+			}, 45);
 		}
 	}
 

@@ -1,5 +1,6 @@
 package fr.olympa.warfare.weapons;
 
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 public interface ItemStackable {
@@ -12,10 +13,8 @@ public interface ItemStackable {
 		return getClass().getSimpleName() + "-" + getId();
 	}
 	
-	public ItemStack createItem();
+	public void giveItems(Player p);
 	
-	public default ItemStack getDemoItem() {
-		return createItem();
-	}
+	public ItemStack getDemoItem();
 	
 }
