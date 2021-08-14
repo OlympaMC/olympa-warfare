@@ -1,7 +1,6 @@
 package fr.olympa.warfare;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
 
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -15,7 +14,6 @@ import fr.olympa.api.common.plugin.OlympaAPIPlugin;
 import fr.olympa.api.common.provider.AccountProviderAPI;
 import fr.olympa.api.common.server.OlympaServer;
 import fr.olympa.api.spigot.CombatManager;
-import fr.olympa.api.spigot.command.essentials.KitCommand;
 import fr.olympa.api.spigot.lines.CyclingLine;
 import fr.olympa.api.spigot.lines.DynamicLine;
 import fr.olympa.api.spigot.lines.FixedLine;
@@ -28,13 +26,8 @@ import fr.olympa.api.spigot.scoreboard.sign.ScoreboardManager;
 import fr.olympa.api.spigot.utils.ProtocolAPI;
 import fr.olympa.api.spigot.utils.TeleportationManager;
 import fr.olympa.core.spigot.OlympaCore;
-import fr.olympa.warfare.kits.KitManageCommand;
-import fr.olympa.warfare.kits.KitsManager;
-import fr.olympa.warfare.kits.gui.KitListGUI;
 import fr.olympa.warfare.ranking.BestKillStreakRank;
 import fr.olympa.warfare.ranking.TotalKillRank;
-import fr.olympa.warfare.spawning.SpawnPointCommand;
-import fr.olympa.warfare.spawning.SpawnPointsManager;
 import fr.olympa.warfare.weapons.guns.GunRegistry;
 import fr.olympa.warfare.xp.LevelCommand;
 import fr.olympa.warfare.xp.XPManagement;
@@ -47,9 +40,7 @@ public class OlympaWarfare extends OlympaAPIPlugin {
 		return instance;
 	}
 
-	public KitsManager kits;
 	public CombatManager combat;
-	public SpawnPointsManager spawnPoints;
 	public TeleportationManager teleportationManager;
 	
 	public GunRegistry gunRegistry = new GunRegistry();
@@ -85,19 +76,6 @@ public class OlympaWarfare extends OlympaAPIPlugin {
 				new FrostWalkerFlag(false),
 				new PlayerBlockInteractFlag(false, true, true)));
 
-		try {
-			kits = new KitsManager();
-			new KitManageCommand(this).register();
-			new KitCommand<>(this, new ArrayList<>(kits.getKits())) {
-				@Override
-				protected void noArgument() {
-					new KitListGUI(getOlympaPlayer()).create(getPlayer());
-				}
-			}.register();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-
 		scoreboards = new ScoreboardManager<OlympaPlayerWarfare>(this, "§6Olympa §e§lWarfare").addLines(
 				FixedLine.EMPTY_LINE,
 				lineKills,
@@ -123,13 +101,6 @@ public class OlympaWarfare extends OlympaAPIPlugin {
 				return ActionResult.ALLOW;
 			}
 		});
-
-		try {
-			spawnPoints = new SpawnPointsManager();
-			new SpawnPointCommand(this).register();
-		} catch (SQLException ex) {
-			ex.printStackTrace();
-		}
 
 		try {
 			totalKillRank = new TotalKillRank(getConfig().getLocation("rankingHolograms.totalKills"));

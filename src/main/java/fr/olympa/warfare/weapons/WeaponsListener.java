@@ -1,10 +1,7 @@
 package fr.olympa.warfare.weapons;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
-import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -28,7 +25,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
-import fr.olympa.api.utils.Prefix;
 import fr.olympa.warfare.OlympaWarfare;
 import fr.olympa.warfare.weapons.guns.Gun;
 import fr.olympa.warfare.weapons.guns.GunRegistry;
@@ -40,8 +36,6 @@ public class WeaponsListener implements Listener {
 	public static final NamespacedKey GRENADE_KEY = new NamespacedKey(OlympaWarfare.getInstance(), "grenade");
 
 	public static boolean cancelDamageEvent = false; // dommage causé par le contact d'une balle
-
-	private static final List<Material> NOT_WEAPON = Arrays.asList(Material.DIAMOND_AXE, Material.DIAMOND_HOE, Material.DIAMOND_SHOVEL, Material.DIAMOND_PICKAXE);
 
 	@EventHandler
 	public void onDamage(EntityDamageByEntityEvent e) {
@@ -61,9 +55,6 @@ public class WeaponsListener implements Listener {
 			if (damager.getFallDistance() > 0 && !damager.isOnGround())
 				e.setDamage(e.getDamage() * 1.5F);
 			else e.setDamage(e.getDamage() + ThreadLocalRandom.current().nextDouble() - 0.5);
-		}else if (NOT_WEAPON.contains(item.getType())) {
-			e.setCancelled(true);
-			Prefix.DEFAULT_BAD.sendMessage(damager, "Vous ne pouvez pas utiliser un outil comme arme.");
 		}
 	}
 

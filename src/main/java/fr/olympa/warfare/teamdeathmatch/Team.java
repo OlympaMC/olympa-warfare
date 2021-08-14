@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -20,13 +21,13 @@ public enum Team {
 			3,
 			Material.BLUE_DYE,
 			ChatColor.BLUE,
-			new Location(null, 0, 0, 0)),
+			new Location(Bukkit.getWorld("world"), -451, 82, 122)),
 	RED(
 			"§cÉquipe rouge",
 			5,
 			Material.RED_DYE,
 			ChatColor.RED,
-			new Location(null, 0, 0, 0)),
+			new Location(Bukkit.getWorld("world"), -597, 82, -7)),
 	;
 	
 	private final String name;
