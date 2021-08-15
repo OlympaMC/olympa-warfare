@@ -1,35 +1,53 @@
 package fr.olympa.warfare.teamdeathmatch;
 
 import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
+import org.bukkit.event.player.PlayerRespawnEvent;
 
 import fr.olympa.api.common.groups.OlympaGroup;
+import fr.olympa.api.spigot.lines.FixedLine;
+import fr.olympa.api.spigot.scoreboard.sign.Scoreboard;
 import fr.olympa.api.utils.Prefix;
-import fr.olympa.warfare.Kit;
 import fr.olympa.warfare.OlympaPlayerWarfare;
+import fr.olympa.warfare.kits.Kits;
 import fr.olympa.warfare.weapons.WeaponsListener;
 
 public class PlayingGameState extends GameState {
 
+	private List<Player> living = new ArrayList<>();
+	private List<Team> going = new ArrayList<>();
+	
 	public PlayingGameState(TDM tdm) {
 		super(tdm);
 	}
 	
 	@Override
-	public void start() {
-		super.start();
+	public void start(GameState from) {
+		super.start(from);
 		Prefix.BROADCAST.sendMessage(Bukkit.getOnlinePlayers(), "Début de la partie ! Tuez tous les joueurs adverses jusqu'à ce qu'ils perdent toutes leurs vies !");
 		Bukkit.getPluginManager().registerEvents(new WeaponsListener(), tdm.getPlugin());
+		living.addAll(Bukkit.getOnlinePlayers());
+		going.addAll(Arrays.asList(Team.values()));
+	}
+	
+	@EventHandler
+	public void onPreLogin(AsyncPlayerPreLoginEvent e) {
+		e.setLoginResult(AsyncPlayerPreLoginEvent.Result.KICK_OTHER);
+		e.setKickMessage("La partie a déjà commencé.");
 	}
 	
 	@Override
@@ -37,6 +55,11 @@ public class PlayingGameState extends GameState {
 	
 	@Override
 	public void onQuit(PlayerQuitEvent e) {}
+	
+	@Override
+	protected void handleScoreboard(Scoreboard<OlympaPlayerWarfare> scoreboard) {
+		scoreboard.addLines(FixedLine.EMPTY_LINE, OlympaPlayerWarfare.LINE_LIVES, FixedLine.EMPTY_LINE, OlympaPlayerWarfare.LINE_KIT);
+	}
 	
 	@Override
 	protected boolean cancelDamage(Player p, EntityDamageEvent e) {
@@ -53,12 +76,14 @@ public class PlayingGameState extends GameState {
 		boolean legitKill = false;
 		
 		OlympaPlayerWarfare deadOP = OlympaPlayerWarfare.get(dead);
+		deadOP.lives.decrement();
+		Team team = Team.getPlayerTeam(dead);
 		if (killer != null) {
-			Kit deadKit = deadOP.getUsedKit();
+			Kits deadKit = deadOP.usedKit.get();
 			OlympaPlayerWarfare killerOP = OlympaPlayerWarfare.get(killer);
-			Kit killerKit = null;
+			Kits killerKit = null;
 			if (killerOP != null)
-				killerKit = killerOP.getUsedKit();
+				killerKit = killerOP.usedKit.get();
 			if (deadKit != null && killerKit != null) {
 				
 				double xpGain = 1;
@@ -74,23 +99,53 @@ public class PlayingGameState extends GameState {
 				killerOP.getKills().increment();
 				
 				boolean afar = dead.getLastDamageCause().getCause() == DamageCause.PROJECTILE;
-				e.setDeathMessage("§c☠ §l" + dead.getName() + "§c (" + deadKit.getId() + ") §7" + (afar ? "🏹" : "⚔") + " §4§l" + killer.getName() + "§4 (" + killerKit.getId() + ") §7~ ks §l" + killerOP.getKillStreak().get());
+				e.setDeathMessage("§c☠ " + team.getColor() + "§l" + dead.getName() + "§c (" + deadKit.getName() + ") §7" + (afar ? "🏹" : "⚔") + " §4§l" + killer.getName() + "§4 (" + killerKit.getName() + ") §7~ " + deadOP.lives.get() + "§c❤");
 				legitKill = true;
-				
-				if (killer.getHealth() < 15) {
-					killer.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 10 * 20, (int) (Math.floor(15D - killer.getHealth()) / 5D)));
-					killer.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 6 * 20, 1));
-				}
 			}
 			
 		}
-		if (!legitKill) e.setDeathMessage("§c☠ §l" + dead.getName() + "§c est mort.");
+		if (!legitKill) e.setDeathMessage("§c☠ " + team.getColor() + "§l" + dead.getName() + "§7 est mort. ~ " + deadOP.lives.get() + "§c❤");
 		
 		e.setDroppedExp(0);
 		e.getDrops().clear();
-		e.setKeepInventory(true);
 		
-		Prefix.DEFAULT.sendMessage(dead, "Tu es mort...");
+		if (deadOP.lives.get() > 0) {
+			e.setKeepInventory(true);
+			
+			Prefix.DEFAULT.sendMessage(dead, "Tu es mort...");
+		}else {
+			e.setDeathMessage(e.getDeathMessage() + "\n§4✖ " + team.getColor() + "§l" + dead.getName() + " §4est éliminé !");
+			Prefix.DEFAULT_BAD.sendMessage(dead, "Tu es éliminé... Tu peux maintenant regarder la fin des combats sans y participer.");
+			
+			living.remove(dead);
+			if (team.getPlayers().stream().noneMatch(living::contains)) {
+				going.remove(team);
+				e.setDeathMessage(e.getDeathMessage() + "\n§4§lL'" + team.getName() + " est éliminée !");
+				if (going.size() <= 1) {
+					tdm.setState(tdm -> new EndGameState(tdm, going.get(0)));
+				}
+			}
+		}
+	}
+	
+	@EventHandler
+	public void onRespawn(PlayerRespawnEvent e) {
+		Team team = Team.getPlayerTeam(e.getPlayer());
+		e.setRespawnLocation(team.getSpawnpoint());
+		OlympaPlayerWarfare player = OlympaPlayerWarfare.get(e.getPlayer());
+		if (player.lives.get() <= 0) {
+			e.getPlayer().setGameMode(GameMode.SPECTATOR);
+		}
+	}
+	
+	@Override
+	public void onChat(AsyncPlayerChatEvent e) {
+		if (living.contains(e.getPlayer())) {
+			super.onChat(e);
+		}else {
+			e.getRecipients().removeAll(living);
+			e.setFormat("§7[SPECTATEURS] " + Team.getPlayerTeam(e.getPlayer()).getColor() + "%s : %s");
+		}
 	}
 	
 }

@@ -12,7 +12,11 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.scheduler.BukkitTask;
 
+import fr.olympa.api.spigot.lines.FixedLine;
+import fr.olympa.api.spigot.lines.TimerLine;
+import fr.olympa.api.spigot.scoreboard.sign.Scoreboard;
 import fr.olympa.api.utils.Prefix;
+import fr.olympa.warfare.OlympaPlayerWarfare;
 
 public class WaitingGameState extends GameState {
 	
@@ -20,8 +24,23 @@ public class WaitingGameState extends GameState {
 	
 	private int countdown = -1;
 	
+	private final TimerLine<Scoreboard<OlympaPlayerWarfare>> LINE_TITLE;
+	
 	public WaitingGameState(TDM tdm) {
 		super(tdm);
+		
+		LINE_TITLE = new TimerLine<>(x -> {
+			if (task == null) {
+				return "§c> En attente de\njoueurs... §7(" + Bukkit.getOnlinePlayers().size() + "/" + tdm.getMinPlayers() + ")";
+			}else {
+				return "§8> §7Début dans\n§a  §l" + countdown + "§7 secondes !";
+			}
+		}, tdm.getPlugin(), 2);
+	}
+	
+	@Override
+	protected void handleScoreboard(Scoreboard<OlympaPlayerWarfare> scoreboard) {
+		scoreboard.addLines(FixedLine.EMPTY_LINE, LINE_TITLE);
 	}
 	
 	@Override
@@ -59,7 +78,7 @@ public class WaitingGameState extends GameState {
 	}
 	
 	public String getOnlineString(int online) {
-		return " §e(" + online + "/" + tdm.getMinPlayers() + ")";
+		return " §e(" + online + "/" + Bukkit.getMaxPlayers() + ")";
 	}
 	
 	public void updateCountdown(int online) {

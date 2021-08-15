@@ -30,7 +30,7 @@ public class KitListGUI extends PagedGUI<Kits> {
 		if (existing.getMinLevel() > player.getLevel()) {
 			Prefix.DEFAULT_BAD.sendMessage(p, "Tu n'as pas le niveau requis pour prendre ce kit.");
 		}else {
-			player.usedKit = existing;
+			player.usedKit.set(existing);
 			Prefix.DEFAULT_GOOD.sendMessage(p, "Tu as sélectionné le kit %s.", existing.getName());
 		}
 	}

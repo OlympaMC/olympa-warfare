@@ -11,9 +11,12 @@ import org.bukkit.entity.Player;
 
 import fr.olympa.api.common.observable.ObservableDouble;
 import fr.olympa.api.common.observable.ObservableInt;
+import fr.olympa.api.common.observable.ObservableValue;
 import fr.olympa.api.common.provider.AccountProviderAPI;
 import fr.olympa.api.common.provider.OlympaPlayerObject;
 import fr.olympa.api.common.sql.SQLColumn;
+import fr.olympa.api.spigot.lines.DynamicLine;
+import fr.olympa.api.spigot.scoreboard.sign.Scoreboard;
 import fr.olympa.core.spigot.OlympaCore;
 import fr.olympa.warfare.kits.Kits;
 import fr.olympa.warfare.xp.LevelManagement;
@@ -31,7 +34,11 @@ public class OlympaPlayerWarfare extends OlympaPlayerObject {
 	private ObservableDouble xp = new ObservableDouble(0);
 	private ObservableInt kills = new ObservableInt(0);
 
-	public Kits usedKit = null;
+	public final ObservableValue<Kits> usedKit = new ObservableValue<>(null);
+	public final ObservableInt lives = new ObservableInt(3);
+	
+	public static final DynamicLine<Scoreboard<OlympaPlayerWarfare>> LINE_KIT = new DynamicLine<>(x -> "§7Kit: §a§l" + x.getOlympaPlayer().usedKit.mapOr(Kits::getName, "§cnon choisi"));
+	public static final DynamicLine<Scoreboard<OlympaPlayerWarfare>> LINE_LIVES = new DynamicLine<>(x -> "§7Vies: §c" + "❤".repeat(x.getOlympaPlayer().lives.get()));
 
 	public OlympaPlayerWarfare(UUID uuid, String name, String ip) {
 		super(uuid, name, ip);
@@ -51,6 +58,8 @@ public class OlympaPlayerWarfare extends OlympaPlayerObject {
 		kills.observe("datas", () -> COLUMN_KILLS.updateAsync(this, kills.get(), null, null));
 		kills.observe("ranking", () -> OlympaWarfare.getInstance().totalKillRank.handleNewScore(getName(), (Player) getPlayer(), kills.get()));
 		kills.observe("scoreboard_update", () -> OlympaWarfare.getInstance().lineKills.updateHolder(OlympaWarfare.getInstance().scoreboards.getPlayerScoreboard(this)));
+		usedKit.observe("scoreboard_update", () -> LINE_KIT.updateHolder(OlympaWarfare.getInstance().scoreboards.getPlayerScoreboard(this)));
+		lives.observe("scoreboard_update", () -> LINE_LIVES.updateHolder(OlympaWarfare.getInstance().scoreboards.getPlayerScoreboard(this)));
 	}
 
 	public int getLevel() {

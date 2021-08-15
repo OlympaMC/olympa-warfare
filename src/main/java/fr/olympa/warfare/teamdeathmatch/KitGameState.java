@@ -20,6 +20,8 @@ import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.scheduler.BukkitTask;
 
 import fr.olympa.api.spigot.item.ItemUtils;
+import fr.olympa.api.spigot.lines.FixedLine;
+import fr.olympa.api.spigot.scoreboard.sign.Scoreboard;
 import fr.olympa.api.utils.Prefix;
 import fr.olympa.warfare.OlympaPlayerWarfare;
 import fr.olympa.warfare.OlympaWarfare;
@@ -29,6 +31,8 @@ public class KitGameState extends GameState {
 	
 	private final int waitSeconds = 20;
 	
+	private final FixedLine<Scoreboard<OlympaPlayerWarfare>> LINE_TITLE = new FixedLine<>("§8> §7La partie va commencer!\n\n§8> §7Choisissez votre kit.");
+	
 	private BukkitTask task;
 	
 	public KitGameState(TDM tdm) {
@@ -36,8 +40,8 @@ public class KitGameState extends GameState {
 	}
 	
 	@Override
-	public void start() {
-		super.start();
+	public void start(GameState from) {
+		super.start(from);
 		List<Player> players = new ArrayList<>(Bukkit.getOnlinePlayers());
 		List<Player> toTest = new ArrayList<>(players);
 		int playersSize = players.size();
@@ -106,6 +110,11 @@ public class KitGameState extends GameState {
 	public void stop() {
 		super.stop();
 		task.cancel();
+	}
+	
+	@Override
+	protected void handleScoreboard(Scoreboard<OlympaPlayerWarfare> scoreboard) {
+		scoreboard.addLines(FixedLine.EMPTY_LINE, LINE_TITLE, FixedLine.EMPTY_LINE, OlympaPlayerWarfare.LINE_KIT);
 	}
 	
 	@Override
