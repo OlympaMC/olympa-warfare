@@ -5,6 +5,7 @@ import java.util.Arrays;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -31,9 +32,9 @@ public class WaitingGameState extends GameState {
 		
 		LINE_TITLE = new TimerLine<>(x -> {
 			if (task == null) {
-				return "§c> En attente de\njoueurs... §7(" + Bukkit.getOnlinePlayers().size() + "/" + tdm.getMinPlayers() + ")";
+				return "§c> En attente de\n§c  joueurs... §7(" + Bukkit.getOnlinePlayers().size() + "/" + tdm.getMinPlayers() + ")";
 			}else {
-				return "§8> §7Début dans\n§a  §l" + countdown + "§7 secondes !";
+				return "§8> §8Début dans\n§a  §l" + countdown + "§8 secondes !";
 			}
 		}, tdm.getPlugin(), 2);
 	}
@@ -43,7 +44,7 @@ public class WaitingGameState extends GameState {
 		scoreboard.addLines(FixedLine.EMPTY_LINE, LINE_TITLE);
 	}
 	
-	@Override
+	@EventHandler (priority = EventPriority.HIGHEST)
 	public void onJoin(PlayerJoinEvent e) {
 		int online = Bukkit.getOnlinePlayers().size();
 		updateCountdown(online);
@@ -51,7 +52,7 @@ public class WaitingGameState extends GameState {
 		for (Team team : Team.values()) e.getPlayer().getInventory().setItem(team.getSlot(), team.getItem());
 	}
 	
-	@Override
+	@EventHandler (priority = EventPriority.HIGHEST)
 	public void onQuit(PlayerQuitEvent e) {
 		int online = Bukkit.getOnlinePlayers().size() - 1;
 		updateCountdown(online);
@@ -70,6 +71,7 @@ public class WaitingGameState extends GameState {
 		Team chosen = Arrays.stream(Team.values()).filter(x -> x.getSlot() == slot).findAny().orElse(null);
 		if (chosen != null) {
 			Team oldTeam = Team.getPlayerTeam(p);
+			if (oldTeam == chosen) return;
 			if (oldTeam != null) oldTeam.removePlayer(p);
 			chosen.addPlayer(p);
 			tdm.teamChanged(p);
@@ -88,7 +90,7 @@ public class WaitingGameState extends GameState {
 			countdown = 60;
 			task = Bukkit.getScheduler().runTaskTimer(tdm.getPlugin(), () -> {
 				if (countdown == 0) {
-					tdm.setState(PlayingGameState::new);
+					tdm.setState(KitGameState::new);
 					task.cancel();
 					task = null;
 				}

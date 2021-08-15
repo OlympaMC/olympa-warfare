@@ -1,10 +1,11 @@
 serverIndex: -1
 # Available: BOX, TDM
-serverType: null
+serverType: TDM
+minPlayers: 4
 
 resourcePack:
-  url: https://drive.google.com/uc?export=download&id=14iEWROIPNm0nEFnmzQC71OnQLHcy-uLm
-  hash: FDEE47ADBB6AA23A7A7A8F6E9F92D38162729CDB
+  url: https://drive.google.com/uc?export=download&id=1rJPGacKOuMa-OqXnxSIl2z5qZf3fVEBY
+  hash: A97B4069B1B40DB03B1695DE027F70FB652C6FA5
 
 pvpLocation: world -94 91 32 -90 0
 

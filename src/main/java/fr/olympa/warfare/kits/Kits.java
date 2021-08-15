@@ -17,21 +17,21 @@ import fr.olympa.warfare.weapons.guns.GunType;
 public enum Kits {
 	
 	SOLDAT(
-			0,
+			1,
 			"Soldat",
 			GunType.P22,
 			GunType.M16,
 			Knife.SURIN,
 			ArmorType.PP1),
 	BOURINOS(
-			1,
+			2,
 			"Bourrin",
 			GunType.KSG,
 			GunType.REM_870,
 			Knife.BATTE,
 			ArmorType.P1PP1),
 	POLY(
-			3,
+			4,
 			"Polyvalent",
 			GunType.SDMR,
 			GunType.G19,
@@ -39,14 +39,14 @@ public enum Kits {
 			Knife.BATTE,
 			ArmorType.PP1),
 	KAMIKAZE(
-			5,
+			7,
 			"Kamikaze",
 			Grenade.GRENADE.toAmount(8),
 			GunType.AK_20,
 			Knife.SURIN,
 			ArmorType.PP1),
 	SNIPER(
-			8,
+			10,
 			"Sniper",
 			GunType.DRAGUNOV,
 			Knife.SURIN,
@@ -71,9 +71,9 @@ public enum Kits {
 		}
 		lore.add("");
 		lore.add("§a✔ §7Niveau " + minLevel);
-		itemValid = ItemUtils.name(ItemUtils.setRawLore(stackables[0].getDemoItem(), lore), "§7Kit §l" + name);
+		itemValid = ItemUtils.name(ItemUtils.setRawLore(stackables[0].getDemoItem().clone(), lore), "§7Kit §l" + name);
 		lore.set(lore.size() - 1, "§c✖ §7Niveau " + minLevel);
-		itemValid = ItemUtils.name(ItemUtils.setRawLore(stackables[0].getDemoItem(), lore), "§7Kit §l" + name);
+		itemInvalid = ItemUtils.name(ItemUtils.setRawLore(stackables[0].getDemoItem().clone(), lore), "§7Kit §l" + name);
 	}
 	
 	public int getMinLevel() {

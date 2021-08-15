@@ -12,9 +12,9 @@ import org.bukkit.GameMode;
 import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.scheduler.BukkitTask;
@@ -47,6 +47,7 @@ public class EndGameState extends GameState {
 			team.getPlayers().forEach(x -> {
 				x.sendTitle(team == winning ? "§6§lVictoire !" : "§cDéfaite...", "§7Félicitations à tous !", 5, 200, 55);
 				x.setGameMode(GameMode.SPECTATOR);
+				Prefix.BROADCAST.sendMessage(x, "§aVictoire de l'%s§a !", winning.getName());
 			});
 		}
 		super.start(from);
@@ -62,6 +63,7 @@ public class EndGameState extends GameState {
 				meta.setPower(random.nextInt(2, 6));
 				meta.addEffect(FireworkEffect.builder().with(Utils.getRandomFrom(random, Type.values())).withColor(Color.YELLOW).withFade(Color.ORANGE).withTrail().build());
 				firework.setFireworkMeta(meta);
+				firework.setPersistent(false);
 			});
 		}, 1, 15);
 	}
@@ -84,15 +86,13 @@ public class EndGameState extends GameState {
 		e.setKickMessage("La partie est terminée !");
 	}
 	
-	@Override
-	public void onJoin(PlayerJoinEvent e) {}
-	
-	@Override
+	@EventHandler (priority = EventPriority.HIGHEST)
 	public void onQuit(PlayerQuitEvent e) {
 		if (Bukkit.getOnlinePlayers().size() == 1) tdm.setState(null); // dernier joueur à quitter
 	}
 	
 	@Override
+	@EventHandler (priority = EventPriority.HIGH)
 	public void onChat(AsyncPlayerChatEvent e) {
 		e.setFormat(Team.getPlayerTeam(e.getPlayer()).getColor() + "%s " + OlympaPlayerWarfare.get(e.getPlayer()).getGroup().getChatSuffix() + " %s");
 	}

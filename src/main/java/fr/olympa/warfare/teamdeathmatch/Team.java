@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -17,31 +18,35 @@ import net.md_5.bungee.api.ChatColor;
 public enum Team {
 	
 	BLUE(
-			"§8Équipe bleue",
+			"§9Équipe bleue",
 			3,
 			Material.BLUE_DYE,
 			ChatColor.BLUE,
-			new Location(Bukkit.getWorld("world"), -451, 82, 122)),
+			Color.BLUE,
+			new Location(Bukkit.getWorld("world"), 13, 91, 232, 180, 0)),
 	RED(
 			"§cÉquipe rouge",
 			5,
 			Material.RED_DYE,
 			ChatColor.RED,
-			new Location(Bukkit.getWorld("world"), -597, 82, -7)),
+			Color.RED,
+			new Location(Bukkit.getWorld("world"), -113, 91, 19)),
 	;
 	
 	private final String name;
 	private final int slot;
 	private final ItemStack item;
 	private final ChatColor color;
+	private final Color armorColor;
 	private final Location spawnpoint;
 	
 	private List<Player> players = new ArrayList<>();
 	
-	private Team(String name, int slot, Material material, ChatColor color, Location spawnpoint) {
+	private Team(String name, int slot, Material material, ChatColor color, Color armorColor, Location spawnpoint) {
 		this.name = name;
 		this.slot = slot;
 		this.color = color;
+		this.armorColor = armorColor;
 		this.spawnpoint = spawnpoint;
 		this.item = ItemUtils.item(material, "§7Rejoindre l'" + name);
 	}
@@ -62,6 +67,10 @@ public enum Team {
 		return color;
 	}
 	
+	public Color getArmorColor() {
+		return armorColor;
+	}
+	
 	public Location getSpawnpoint() {
 		return spawnpoint;
 	}
@@ -73,7 +82,7 @@ public enum Team {
 	public void addPlayer(Player p) {
 		if (players.contains(p)) return;
 		Prefix.DEFAULT.sendMessage(players, "§e§l%s §7rejoint l'%s", p.getName(), name);
-		Prefix.DEFAULT.sendMessage(p, "Tu as rejoint l'%s", name);
+		Prefix.DEFAULT.sendMessage(p, "Tu as rejoint l'%s§7 !", name);
 		players.add(p);
 	}
 	

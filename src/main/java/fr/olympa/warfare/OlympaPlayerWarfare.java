@@ -37,8 +37,8 @@ public class OlympaPlayerWarfare extends OlympaPlayerObject {
 	public final ObservableValue<Kits> usedKit = new ObservableValue<>(null);
 	public final ObservableInt lives = new ObservableInt(3);
 	
-	public static final DynamicLine<Scoreboard<OlympaPlayerWarfare>> LINE_KIT = new DynamicLine<>(x -> "§7Kit: §a§l" + x.getOlympaPlayer().usedKit.mapOr(Kits::getName, "§cnon choisi"));
-	public static final DynamicLine<Scoreboard<OlympaPlayerWarfare>> LINE_LIVES = new DynamicLine<>(x -> "§7Vies: §c" + "❤".repeat(x.getOlympaPlayer().lives.get()));
+	public static final DynamicLine<Scoreboard<OlympaPlayerWarfare>> LINE_KIT = new DynamicLine<>(x -> "§7§lKit: §a§l" + x.getOlympaPlayer().usedKit.mapOr(Kits::getName, "§cnon choisi"));
+	public static final DynamicLine<Scoreboard<OlympaPlayerWarfare>> LINE_LIVES = new DynamicLine<>(x -> "§7§lVies: " + x.getOlympaPlayer().getLivesString());
 
 	public OlympaPlayerWarfare(UUID uuid, String name, String ip) {
 		super(uuid, name, ip);
@@ -60,6 +60,7 @@ public class OlympaPlayerWarfare extends OlympaPlayerObject {
 		kills.observe("scoreboard_update", () -> OlympaWarfare.getInstance().lineKills.updateHolder(OlympaWarfare.getInstance().scoreboards.getPlayerScoreboard(this)));
 		usedKit.observe("scoreboard_update", () -> LINE_KIT.updateHolder(OlympaWarfare.getInstance().scoreboards.getPlayerScoreboard(this)));
 		lives.observe("scoreboard_update", () -> LINE_LIVES.updateHolder(OlympaWarfare.getInstance().scoreboards.getPlayerScoreboard(this)));
+		lives.observe("tab_update", () -> OlympaCore.getInstance().getNameTagApi().callNametagUpdate(this));
 	}
 
 	public int getLevel() {
@@ -84,6 +85,10 @@ public class OlympaPlayerWarfare extends OlympaPlayerObject {
 		float xpRatio = xp.getAsFloat() / XPManagement.getXPToLevelUp(level.get());
 		if (xpRatio <= 1)
 			p.setExp(xpRatio);
+	}
+	
+	public String getLivesString() {
+		return lives.get() == 0 ? "§4✖" : "§c" + "❤".repeat(lives.get());
 	}
 
 	public ObservableInt getKills() {

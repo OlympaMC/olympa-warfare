@@ -8,20 +8,25 @@ import java.util.List;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 
 import fr.olympa.api.common.groups.OlympaGroup;
+import fr.olympa.api.spigot.lines.DynamicLine;
 import fr.olympa.api.spigot.lines.FixedLine;
 import fr.olympa.api.spigot.scoreboard.sign.Scoreboard;
+import fr.olympa.api.spigot.utils.SpigotUtils;
 import fr.olympa.api.utils.Prefix;
+import fr.olympa.core.spigot.OlympaCore;
 import fr.olympa.warfare.OlympaPlayerWarfare;
 import fr.olympa.warfare.kits.Kits;
 import fr.olympa.warfare.weapons.WeaponsListener;
@@ -31,8 +36,12 @@ public class PlayingGameState extends GameState {
 	private List<Player> living = new ArrayList<>();
 	private List<Team> going = new ArrayList<>();
 	
+	private final DynamicLine<Scoreboard<OlympaPlayerWarfare>> LINE_TEAM;
+	
 	public PlayingGameState(TDM tdm) {
 		super(tdm);
+		
+		LINE_TEAM = new DynamicLine<>(x -> Team.getPlayerTeam((Player) x.getOlympaPlayer().getPlayer()).getName());
 	}
 	
 	@Override
@@ -42,6 +51,11 @@ public class PlayingGameState extends GameState {
 		Bukkit.getPluginManager().registerEvents(new WeaponsListener(), tdm.getPlugin());
 		living.addAll(Bukkit.getOnlinePlayers());
 		going.addAll(Arrays.asList(Team.values()));
+		OlympaCore.getInstance().getNameTagApi().addNametagHandler(EventPriority.HIGH, (nametag, player, to) -> {
+			OlympaPlayerWarfare p = (OlympaPlayerWarfare) player;
+			nametag.appendSuffix(p.getLivesString());
+		});
+		living.forEach(x -> OlympaCore.getInstance().getNameTagApi().callNametagUpdate(OlympaPlayerWarfare.get(x)));
 	}
 	
 	@EventHandler
@@ -50,19 +64,39 @@ public class PlayingGameState extends GameState {
 		e.setKickMessage("La partie a déjà commencé.");
 	}
 	
-	@Override
-	public void onJoin(PlayerJoinEvent e) {}
-	
-	@Override
-	public void onQuit(PlayerQuitEvent e) {}
+	@EventHandler (priority = EventPriority.HIGHEST)
+	public void onQuit(PlayerQuitEvent e) {
+		living.remove(e.getPlayer());
+		Team team = Team.getPlayerTeam(e.getPlayer());
+		if (team.getPlayers().stream().noneMatch(living::contains)) {
+			going.remove(team);
+			SpigotUtils.broadcastMessage("§4§lL'" + team.getName() + "§4 est éliminée !");
+			if (going.size() <= 1) {
+				tdm.setState(tdm -> new EndGameState(tdm, going.get(0)));
+			}
+		}
+	}
 	
 	@Override
 	protected void handleScoreboard(Scoreboard<OlympaPlayerWarfare> scoreboard) {
-		scoreboard.addLines(FixedLine.EMPTY_LINE, OlympaPlayerWarfare.LINE_LIVES, FixedLine.EMPTY_LINE, OlympaPlayerWarfare.LINE_KIT);
+		scoreboard.addLines(FixedLine.EMPTY_LINE, OlympaPlayerWarfare.LINE_LIVES, FixedLine.EMPTY_LINE, OlympaPlayerWarfare.LINE_KIT, FixedLine.EMPTY_LINE, LINE_TEAM);
 	}
 	
 	@Override
 	protected boolean cancelDamage(Player p, EntityDamageEvent e) {
+		if (e.getCause() != DamageCause.ENTITY_EXPLOSION && e instanceof EntityDamageByEntityEvent event) {
+			Player other = null;
+			if (event.getDamager()instanceof Player x) {
+				other = x;
+			}else if (event.getDamager()instanceof Projectile proj && proj.getShooter()instanceof Player x) {
+				other = x;
+			}
+			if (other != null) {
+				Team otherTeam = Team.getPlayerTeam(other);
+				Team team = Team.getPlayerTeam(p);
+				return otherTeam == team;
+			}
+		}
 		return false;
 	}
 	
@@ -126,6 +160,8 @@ public class PlayingGameState extends GameState {
 				}
 			}
 		}
+		
+		tdm.getPlugin().getTask().runTask(e.getEntity().spigot()::respawn);
 	}
 	
 	@EventHandler
@@ -139,12 +175,13 @@ public class PlayingGameState extends GameState {
 	}
 	
 	@Override
+	@EventHandler (priority = EventPriority.HIGH)
 	public void onChat(AsyncPlayerChatEvent e) {
 		if (living.contains(e.getPlayer())) {
 			super.onChat(e);
 		}else {
 			e.getRecipients().removeAll(living);
-			e.setFormat("§7[SPECTATEURS] " + Team.getPlayerTeam(e.getPlayer()).getColor() + "%s : %s");
+			e.setFormat("§7[SPECTATEURS] " + Team.getPlayerTeam(e.getPlayer()).getColor() + "%s §7: %s");
 		}
 	}
 	

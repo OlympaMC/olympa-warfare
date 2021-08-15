@@ -21,9 +21,11 @@ public class TDM {
 	private final OlympaWarfare plugin;
 	
 	private GameState state;
+	private int minPlayers;
 	
-	public TDM(OlympaWarfare plugin) {
+	public TDM(OlympaWarfare plugin, int minPlayers) {
 		this.plugin = plugin;
+		this.minPlayers = minPlayers;
 		setState(WaitingGameState::new);
 		SpigotConfig.disablePlayerDataSaving = true;
 		
@@ -31,7 +33,7 @@ public class TDM {
 			@Override
 			public void updateNameTag(Nametag nametag, OlympaPlayer player, OlympaPlayer to) {
 				Team team = Team.getPlayerTeam((Player) player.getPlayer());
-				if (team != null) nametag.appendPrefix(team.getColor().toString());
+				nametag.appendPrefix(team != null ? team.getColor().toString() : "§7");
 			}
 			
 			@Override
@@ -56,8 +58,13 @@ public class TDM {
 		if (stateProvider != null) {
 			state = stateProvider.apply(this);
 			if (state != null) {
-				state.start(old);
-				return;
+				try {
+					state.start(old);
+					return;
+				}catch (Throwable ex) {
+					SpigotUtils.broadcastMessage("§4Une erreur est survenue.");
+					ex.printStackTrace();
+				}
 			}
 		}
 		SpigotUtils.broadcastMessage(Prefix.BROADCAST.formatMessage("Arrêt de ce serveur de jeu..."));
@@ -65,7 +72,7 @@ public class TDM {
 	}
 	
 	public int getMinPlayers() {
-		return 6;
+		return minPlayers;
 	}
 	
 	public void teamChanged(Player p) {

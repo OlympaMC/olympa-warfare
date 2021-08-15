@@ -7,7 +7,6 @@ import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
@@ -80,6 +79,8 @@ public class Gun implements Weapon {
 		knockback = new Attribute(type.getKnockback());
 		fireRate = new Attribute(type.getFireRate());
 		fireVolume = new Attribute(type.getFireVolume());
+		
+		ammos = (int) maxAmmos.getValue();
 	}
 	
 	public int getID() {
@@ -113,7 +114,7 @@ public class Gun implements Weapon {
 		ItemMeta meta = item.getItemMeta();
 		meta.addItemFlags(ItemFlag.values());
 		meta.getPersistentDataContainer().set(getKey(), PersistentDataType.INTEGER, getID());
-		meta.setCustomModelData(1);
+		meta.setCustomModelData(getCustomModelData());
 		meta.setLore(type.getLore());
 		item.setItemMeta(meta);
 		updateItemName(item);
@@ -134,12 +135,16 @@ public class Gun implements Weapon {
 	public void updateItemCustomModel(ItemStack item) {
 		try {
 			ItemMeta im = item.getItemMeta();
-			im.setCustomModelData(skin.getId() * 2 + (zoomed ? 2 : 1));
+			im.setCustomModelData(getCustomModelData());
 			item.setItemMeta(im);
 		}catch (Exception ex) {
 			OlympaWarfare.getInstance().sendMessage("§cUne erreur est survenue lors de la mise à jour d'un item d'arme.");
 			ex.printStackTrace();
 		}
+	}
+	
+	protected int getCustomModelData() {
+		return skin.getId() * 2 + (zoomed ? 2 : 1);
 	}
 
 	public NamespacedKey getKey() {
@@ -156,7 +161,7 @@ public class Gun implements Weapon {
 	
 	public void setSkin(Skin skin, ItemStack item) {
 		this.skin = skin;
-		updateItemCustomModel(item);
+		if (item != null) updateItemCustomModel(item);
 	}
 	
 	@Override
@@ -365,8 +370,8 @@ public class Gun implements Weapon {
 	}
 
 	public void showAmmos(Player p) {
-		int availableAmmos = shouldTakeItems(p) ? type.getAmmoType().getAmmos(p) : -1;
-		p.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(type.getAmmoType().getColoredName() + "§7: " + (availableAmmos == -1 ? "§c∞" : (availableAmmos == 0 ? "§c0" : availableAmmos))));
+		/*int availableAmmos = shouldTakeItems(p) ? type.getAmmoType().getAmmos(p) : -1;
+		p.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(type.getAmmoType().getColoredName() + "§7: " + (availableAmmos == -1 ? "§c∞" : (availableAmmos == 0 ? "§c0" : availableAmmos))));*/
 	}
 	
 	private void cancelReload(Player p, ItemStack item) {
@@ -380,8 +385,7 @@ public class Gun implements Weapon {
 	}
 	
 	protected boolean shouldTakeItems(Player p) {
-		GunFlag gunFlag = getGunFlag(p);
-		return p.getGameMode() != GameMode.CREATIVE && (gunFlag == null || !gunFlag.isFreeAmmos());
+		return false;
 	}
 
 	public boolean reload(Player p, ItemStack item) {

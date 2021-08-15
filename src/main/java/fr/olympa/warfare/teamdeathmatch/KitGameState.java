@@ -11,6 +11,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -31,7 +32,7 @@ public class KitGameState extends GameState {
 	
 	private final int waitSeconds = 20;
 	
-	private final FixedLine<Scoreboard<OlympaPlayerWarfare>> LINE_TITLE = new FixedLine<>("§8> §7La partie va commencer!\n\n§8> §7Choisissez votre kit.");
+	private final FixedLine<Scoreboard<OlympaPlayerWarfare>> LINE_TITLE = new FixedLine<>("§8> §7La partie va commencer.\n\n§8> §eChoisissez votre kit!");
 	
 	private BukkitTask task;
 	
@@ -96,7 +97,7 @@ public class KitGameState extends GameState {
 		players.forEach(this::playerInventory);
 		
 		Prefix.BROADCAST.sendMessage(players, "Choisissez votre kit ! La partie commence dans %d secondes.", waitSeconds);
-		task = Bukkit.getScheduler().runTaskLater(OlympaWarfare.getInstance(), () -> tdm.setState(PlayingGameState::new), waitSeconds * 20L);
+		task = Bukkit.getScheduler().runTaskLater(OlympaWarfare.getInstance(), () -> tdm.setState(WaitPlayingGameState::new), waitSeconds * 20L);
 	}
 	
 	private void playerInventory(Player p) {
@@ -117,16 +118,17 @@ public class KitGameState extends GameState {
 		scoreboard.addLines(FixedLine.EMPTY_LINE, LINE_TITLE, FixedLine.EMPTY_LINE, OlympaPlayerWarfare.LINE_KIT);
 	}
 	
-	@Override
+	@EventHandler (priority = EventPriority.HIGHEST)
 	public void onJoin(PlayerJoinEvent e) {
 		Team min = null;
 		for (Team team : Team.values()) {
 			if (min == null || team.getPlayers().size() < min.getPlayers().size()) min = team;
 		}
 		min.addPlayer(e.getPlayer());
+		playerInventory(e.getPlayer());
 	}
 	
-	@Override
+	@EventHandler (priority = EventPriority.HIGHEST)
 	public void onQuit(PlayerQuitEvent e) {
 		Team team = Team.getPlayerTeam(e.getPlayer());
 		team.removePlayer(e.getPlayer());

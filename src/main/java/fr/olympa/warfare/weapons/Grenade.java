@@ -23,7 +23,7 @@ import fr.olympa.warfare.weapons.guns.GunFlag;
 public class Grenade implements Weapon, ItemStackable, Cloneable {
 	
 	public static final Grenade GRENADE = new Grenade(1, Material.BLACK_DYE, "Grenade", "Engin explosif détonant quelques secondes après l'avoir lancée.");
-	public static final Map<Integer, Grenade> GRENADES = new HashMap<>();
+	public static Map<Integer, Grenade> GRENADES;
 	
 	private final int id;
 	private final String name;
@@ -43,12 +43,13 @@ public class Grenade implements Weapon, ItemStackable, Cloneable {
 		meta.setCustomModelData(1);
 		item.setItemMeta(meta);
 		
+		if (GRENADES == null) GRENADES = new HashMap<>();
 		GRENADES.put(id, this);
 	}
 	
 	@Override
 	public String getName() {
-		return name;
+		return name + " x" + amount;
 	}
 	
 	@Override
@@ -106,7 +107,7 @@ public class Grenade implements Weapon, ItemStackable, Cloneable {
 			itemEntity.setPickupDelay(Short.MAX_VALUE);
 			Bukkit.getScheduler().runTaskLater(OlympaWarfare.getInstance(), () -> {
 				itemEntity.remove();
-				p.getWorld().createExplosion(itemEntity.getLocation(), 4.5f, false, false, p);
+				p.getWorld().createExplosion(itemEntity.getLocation(), 4f, false, false, p);
 			}, 45);
 		}
 	}

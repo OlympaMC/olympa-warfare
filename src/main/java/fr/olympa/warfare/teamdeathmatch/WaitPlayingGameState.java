@@ -3,8 +3,8 @@ package fr.olympa.warfare.teamdeathmatch;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.scheduler.BukkitTask;
@@ -40,6 +40,7 @@ public class WaitPlayingGameState extends GameState {
 					player.usedKit.set(defaultKit);
 					Prefix.DEFAULT.sendMessage(x, "Le kit %s t'as été donné par défaut.", defaultKit.getName());
 				}
+				x.getInventory().clear();
 				player.usedKit.get().give(x);
 				x.sendTitle("§6Warfare", "§7Début dans §c5 secondes", 10, 20, 0);
 				x.setGameMode(GameMode.ADVENTURE);
@@ -70,11 +71,10 @@ public class WaitPlayingGameState extends GameState {
 		e.setKickMessage("La partie a déjà commencé.");
 	}
 	
-	@Override
-	public void onJoin(PlayerJoinEvent e) {}
-	
-	@Override
-	public void onQuit(PlayerQuitEvent e) {}
+	@EventHandler (priority = EventPriority.HIGHEST)
+	public void onQuit(PlayerQuitEvent e) {
+		if (Bukkit.getOnlinePlayers().size() == 1) tdm.setState(null);
+	}
 	
 	@EventHandler
 	public void onMove(PlayerMoveEvent e) {

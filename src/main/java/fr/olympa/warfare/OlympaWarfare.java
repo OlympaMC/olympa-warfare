@@ -26,6 +26,7 @@ import fr.olympa.core.spigot.OlympaCore;
 import fr.olympa.warfare.ranking.BestKillStreakRank;
 import fr.olympa.warfare.ranking.TotalKillRank;
 import fr.olympa.warfare.teamdeathmatch.TDM;
+import fr.olympa.warfare.weapons.guns.GunFlag;
 import fr.olympa.warfare.weapons.guns.GunRegistry;
 import fr.olympa.warfare.xp.LevelCommand;
 import fr.olympa.warfare.xp.XPManagement;
@@ -38,7 +39,7 @@ public class OlympaWarfare extends OlympaAPIPlugin {
 		return instance;
 	}
 	
-	public GunRegistry gunRegistry = new GunRegistry();
+	public GunRegistry gunRegistry;
 
 	public ScoreboardManager<OlympaPlayerWarfare> scoreboards;
 	public DynamicLine<Scoreboard<OlympaPlayerWarfare>> lineKills = new DynamicLine<>(x -> "§7Kills: §6" + x.getOlympaPlayer().getKills().get());
@@ -51,6 +52,8 @@ public class OlympaWarfare extends OlympaAPIPlugin {
 	public Location pvpLocation;
 	public Region safeZone;
 
+	public ResourcePackCommand resourcePackCommand;
+	
 	@Override
 	public void onEnable() {
 		instance = this;
@@ -58,8 +61,10 @@ public class OlympaWarfare extends OlympaAPIPlugin {
 		OlympaCore.getInstance().setOlympaServer(OlympaServer.WARFARE);
 		OlympaCore.getInstance().getVersionHandler().disableAllUnderI(ProtocolAPI.V1_16_4);
 		OlympaPermission.registerPermissions(WarfarePermissions.class);
-		AccountProviderAPI.getter().setPlayerProvider(OlympaPlayerWarfare.class, OlympaPlayerWarfare::new, "pvpkit", OlympaPlayerWarfare.COLUMNS);
+		AccountProviderAPI.getter().setPlayerProvider(OlympaPlayerWarfare.class, OlympaPlayerWarfare::new, "warfare", OlympaPlayerWarfare.COLUMNS);
 
+		gunRegistry = new GunRegistry();
+		
 		OlympaCore.getInstance().getRegionManager().awaitWorldTracking("world", e -> e.getRegion().registerFlags(
 				new ItemDurabilityFlag(true),
 				new PhysicsFlag(true),
@@ -67,8 +72,9 @@ public class OlympaWarfare extends OlympaAPIPlugin {
 				new GameModeFlag(GameMode.ADVENTURE),
 				new DropFlag(true),
 				new FoodFlag(true),
+				new GunFlag(false, true),
 				new FrostWalkerFlag(false),
-				new PlayerBlockInteractFlag(false, true, true)));
+				new PlayerBlockInteractFlag(true, true, true)));
 
 		scoreboards = new ScoreboardManager<OlympaPlayerWarfare>(this, "§6Olympa §e§lWarfare")
 				.addFooters(
@@ -94,7 +100,7 @@ public class OlympaWarfare extends OlympaAPIPlugin {
 
 		new LevelCommand(this).register();
 
-		OlympaCore.getInstance().getNameTagApi().addNametagHandler(EventPriority.LOWEST, (nametag, player, to) -> nametag.appendSuffix(XPManagement.getLevelPrefix(((OlympaPlayerWarfare) player).getLevel())));
+		OlympaCore.getInstance().getNameTagApi().addNametagHandler(EventPriority.LOWEST, (nametag, player, to) -> nametag.appendPrefix(XPManagement.getLevelPrefix(((OlympaPlayerWarfare) player).getLevel())));
 
 		OlympaAPIPermissionsSpigot.GAMEMODE_COMMAND.setMinGroup(OlympaGroup.MOD);
 		OlympaAPIPermissionsSpigot.FLY_COMMAND.setMinGroup(OlympaGroup.MODP);
@@ -103,7 +109,12 @@ public class OlympaWarfare extends OlympaAPIPlugin {
 		OlympaAPIPermissionsSpigot.INVSEE_COMMAND_INTERACT.setMinGroup(OlympaGroup.MOD);
 		OlympaAPIPermissionsSpigot.ECSEE_COMMAND_INTERACT.setMinGroup(OlympaGroup.MOD);
 		
-		new TDM(this);
+		resourcePackCommand = new ResourcePackCommand(this, getConfig().getConfigurationSection("resourcePack"));
+		resourcePackCommand.register();
+		
+		getServer().getPluginManager().registerEvents(new WarfareListener(), this);
+		
+		new TDM(this, getConfig().getInt("minPlayers"));
 	}
 
 	@Override

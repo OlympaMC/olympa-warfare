@@ -12,8 +12,11 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import fr.olympa.api.spigot.utils.SpigotUtils;
+import fr.olympa.warfare.OlympaPlayerWarfare;
 import fr.olympa.warfare.OlympaWarfare;
+import fr.olympa.warfare.WarfarePermissions;
 import fr.olympa.warfare.weapons.ItemStackable;
+import fr.olympa.warfare.weapons.Skin;
 import fr.olympa.warfare.weapons.ZTASound;
 import fr.olympa.warfare.weapons.guns.AttributeModifier.Operation;
 import fr.olympa.warfare.weapons.guns.Gun.GunAccuracy;
@@ -655,6 +658,9 @@ public enum GunType implements ItemStackable {
 	@Override
 	public void giveItems(Player p) {
 		Gun gun = OlympaWarfare.getInstance().gunRegistry.createGun(this);
+		if (WarfarePermissions.GROUP_SURVIVANT.hasPermission(OlympaPlayerWarfare.get(p))) {
+			gun.setSkin(Skin.GOLD, demoItem);
+		}
 		p.getInventory().addItem(gun.createItemStack());
 	}
 	

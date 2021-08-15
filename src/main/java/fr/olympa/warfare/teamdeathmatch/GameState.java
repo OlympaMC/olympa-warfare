@@ -11,8 +11,7 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
+import org.spigotmc.event.player.PlayerSpawnLocationEvent;
 
 import fr.olympa.api.spigot.customevents.ScoreboardCreateEvent;
 import fr.olympa.api.spigot.scoreboard.sign.Scoreboard;
@@ -52,15 +51,9 @@ public abstract class GameState implements Listener {
 	protected abstract void handleScoreboard(Scoreboard<OlympaPlayerWarfare> scoreboard);
 	
 	@EventHandler (priority = EventPriority.HIGHEST)
-	public abstract void onJoin(PlayerJoinEvent e);
-	
-	@EventHandler (priority = EventPriority.HIGHEST)
-	public abstract void onQuit(PlayerQuitEvent e);
-	
-	@EventHandler (priority = EventPriority.HIGHEST)
 	public void onDamage(EntityDamageEvent e) {
 		if (e.isCancelled()) return;
-		if (e instanceof Player p) {
+		if (e.getEntity() instanceof Player p) {
 			e.setCancelled(cancelDamage(p, e));
 		}
 	}
@@ -70,6 +63,7 @@ public abstract class GameState implements Listener {
 		Team team = Team.getPlayerTeam(e.getPlayer());
 		boolean global = team == null || e.getMessage().startsWith("!");
 		if (global) {
+			if (team != null) e.setMessage(e.getMessage().substring(1));
 			e.setFormat((team == null ? "§7" : team.getColor()) + "%s " + OlympaPlayerWarfare.get(e.getPlayer()).getGroup().getChatSuffix() + " %s");
 		}else {
 			if (TEAMCHAT_HELP.add(e.getPlayer())) Prefix.INFO.sendMessage(e.getPlayer(), "Met un ! devant ton message pour écrire à tout le monde ;-)");
@@ -83,6 +77,11 @@ public abstract class GameState implements Listener {
 	@EventHandler
 	public void onScoreboardCreate(ScoreboardCreateEvent<OlympaPlayerWarfare> e) {
 		handleScoreboard(e.getScoreboard());
+	}
+	
+	@EventHandler
+	public void onJoinLocation(PlayerSpawnLocationEvent e) {
+		e.setSpawnLocation(Bukkit.getWorlds().get(0).getSpawnLocation());
 	}
 	
 	protected boolean cancelDamage(Player p, EntityDamageEvent e) {
