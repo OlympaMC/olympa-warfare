@@ -23,7 +23,7 @@ public enum Team {
 			Material.BLUE_DYE,
 			ChatColor.BLUE,
 			Color.BLUE,
-			new Location(Bukkit.getWorld("world"), 13, 91, 232, 180, 0)),
+			new Location(Bukkit.getWorld("world"), 14, 91, 231, 180, 0)),
 	RED(
 			"§cÉquipe rouge",
 			5,

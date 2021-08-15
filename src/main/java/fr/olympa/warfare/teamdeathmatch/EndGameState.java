@@ -14,7 +14,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
-import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.scheduler.BukkitTask;
@@ -43,6 +42,7 @@ public class EndGameState extends GameState {
 	
 	@Override
 	public void start(GameState from) {
+		tdm.setInGame(true);
 		for (Team team : Team.values()) {
 			team.getPlayers().forEach(x -> {
 				x.sendTitle(team == winning ? "§6§lVictoire !" : "§cDéfaite...", "§7Félicitations à tous !", 5, 200, 55);
@@ -60,7 +60,7 @@ public class EndGameState extends GameState {
 			Player p = Utils.getRandomFrom(random, (List<? extends Player>) Bukkit.getOnlinePlayers());
 			p.getWorld().spawn(p.getLocation().add(0, 3, 0), Firework.class, firework -> {
 				FireworkMeta meta = firework.getFireworkMeta();
-				meta.setPower(random.nextInt(2, 6));
+				meta.setPower(random.nextInt(5));
 				meta.addEffect(FireworkEffect.builder().with(Utils.getRandomFrom(random, Type.values())).withColor(Color.YELLOW).withFade(Color.ORANGE).withTrail().build());
 				firework.setFireworkMeta(meta);
 				firework.setPersistent(false);
@@ -78,12 +78,6 @@ public class EndGameState extends GameState {
 	@Override
 	protected void handleScoreboard(Scoreboard<OlympaPlayerWarfare> scoreboard) {
 		scoreboard.addLines(FixedLine.EMPTY_LINE, LINE_TITLE);
-	}
-	
-	@EventHandler
-	public void onPreLogin(AsyncPlayerPreLoginEvent e) {
-		e.setLoginResult(AsyncPlayerPreLoginEvent.Result.KICK_OTHER);
-		e.setKickMessage("La partie est terminée !");
 	}
 	
 	@EventHandler (priority = EventPriority.HIGHEST)

@@ -29,12 +29,13 @@ public class WaitingGameState extends GameState {
 	
 	public WaitingGameState(TDM tdm) {
 		super(tdm);
+		tdm.setInGame(false);
 		
 		LINE_TITLE = new TimerLine<>(x -> {
 			if (task == null) {
 				return "§c> En attente de\n§c  joueurs... §7(" + Bukkit.getOnlinePlayers().size() + "/" + tdm.getMinPlayers() + ")";
 			}else {
-				return "§8> §8Début dans\n§a  §l" + countdown + "§8 secondes !";
+				return "§8> §7Début dans\n§a  §l" + countdown + "§7§l secondes §7!";
 			}
 		}, tdm.getPlugin(), 2);
 	}

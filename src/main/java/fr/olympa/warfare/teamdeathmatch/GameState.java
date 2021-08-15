@@ -11,6 +11,7 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.spigotmc.event.player.PlayerSpawnLocationEvent;
 
 import fr.olympa.api.spigot.customevents.ScoreboardCreateEvent;
@@ -82,6 +83,14 @@ public abstract class GameState implements Listener {
 	@EventHandler
 	public void onJoinLocation(PlayerSpawnLocationEvent e) {
 		e.setSpawnLocation(Bukkit.getWorlds().get(0).getSpawnLocation());
+	}
+	
+	@EventHandler
+	public void onPreLogin(AsyncPlayerPreLoginEvent e) {
+		if (tdm.isInGame()) {
+			e.setLoginResult(AsyncPlayerPreLoginEvent.Result.KICK_OTHER);
+			e.setKickMessage("La partie a déjà commencé.");
+		}
 	}
 	
 	protected boolean cancelDamage(Player p, EntityDamageEvent e) {

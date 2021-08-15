@@ -16,11 +16,13 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
-import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
 import fr.olympa.api.common.groups.OlympaGroup;
+import fr.olympa.api.common.server.ServerStatus;
 import fr.olympa.api.spigot.lines.DynamicLine;
 import fr.olympa.api.spigot.lines.FixedLine;
 import fr.olympa.api.spigot.scoreboard.sign.Scoreboard;
@@ -37,16 +39,22 @@ public class PlayingGameState extends GameState {
 	private List<Team> going = new ArrayList<>();
 	
 	private final DynamicLine<Scoreboard<OlympaPlayerWarfare>> LINE_TEAM;
+	//private final DynamicLine<Scoreboard<OlympaPlayerWarfare>> LINE_STEP;
+	
+	private GameStep nextStep = GameStep.GLOWING;
 	
 	public PlayingGameState(TDM tdm) {
 		super(tdm);
+		tdm.setInGame(true);
 		
 		LINE_TEAM = new DynamicLine<>(x -> Team.getPlayerTeam((Player) x.getOlympaPlayer().getPlayer()).getName());
+		//LINE_STEP = new DynamicLine<>(x -> )
 	}
 	
 	@Override
 	public void start(GameState from) {
 		super.start(from);
+		OlympaCore.getInstance().setStatus(ServerStatus.IN_GAME);
 		Prefix.BROADCAST.sendMessage(Bukkit.getOnlinePlayers(), "Début de la partie ! Tuez tous les joueurs adverses jusqu'à ce qu'ils perdent toutes leurs vies !");
 		Bukkit.getPluginManager().registerEvents(new WeaponsListener(), tdm.getPlugin());
 		living.addAll(Bukkit.getOnlinePlayers());
@@ -56,14 +64,11 @@ public class PlayingGameState extends GameState {
 			nametag.appendSuffix(p.getLivesString());
 		});
 		living.forEach(x -> OlympaCore.getInstance().getNameTagApi().callNametagUpdate(OlympaPlayerWarfare.get(x)));
+		
+		//task = Bukkit.getScheduler().runTaskLater(null, null, 0)
 	}
 	
-	@EventHandler
-	public void onPreLogin(AsyncPlayerPreLoginEvent e) {
-		e.setLoginResult(AsyncPlayerPreLoginEvent.Result.KICK_OTHER);
-		e.setKickMessage("La partie a déjà commencé.");
-	}
-	
+
 	@EventHandler (priority = EventPriority.HIGHEST)
 	public void onQuit(PlayerQuitEvent e) {
 		living.remove(e.getPlayer());
@@ -154,7 +159,7 @@ public class PlayingGameState extends GameState {
 			living.remove(dead);
 			if (team.getPlayers().stream().noneMatch(living::contains)) {
 				going.remove(team);
-				e.setDeathMessage(e.getDeathMessage() + "\n§4§lL'" + team.getName() + " est éliminée !");
+				e.setDeathMessage(e.getDeathMessage() + "\n§4§lL'" + team.getName() + "§4 est éliminée !");
 				if (going.size() <= 1) {
 					tdm.setState(tdm -> new EndGameState(tdm, going.get(0)));
 				}
@@ -171,6 +176,8 @@ public class PlayingGameState extends GameState {
 		OlympaPlayerWarfare player = OlympaPlayerWarfare.get(e.getPlayer());
 		if (player.lives.get() <= 0) {
 			e.getPlayer().setGameMode(GameMode.SPECTATOR);
+		}else {
+			e.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 5 * 20, 1, false, false));
 		}
 	}
 	

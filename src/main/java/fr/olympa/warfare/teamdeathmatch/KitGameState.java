@@ -43,6 +43,7 @@ public class KitGameState extends GameState {
 	@Override
 	public void start(GameState from) {
 		super.start(from);
+		tdm.setInGame(false);
 		List<Player> players = new ArrayList<>(Bukkit.getOnlinePlayers());
 		List<Player> toTest = new ArrayList<>(players);
 		int playersSize = players.size();

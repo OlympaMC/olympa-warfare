@@ -4,8 +4,8 @@ serverType: TDM
 minPlayers: 4
 
 resourcePack:
-  url: https://drive.google.com/uc?export=download&id=1rJPGacKOuMa-OqXnxSIl2z5qZf3fVEBY
-  hash: A97B4069B1B40DB03B1695DE027F70FB652C6FA5
+  url: https://drive.google.com/uc?export=download&id=10VKRoKaCvwDrbW9VOLsDZLm4L9DTOfve
+  hash: 6FCB86784E06A2B54C4B55B53D54A26F276F9077
 
 pvpLocation: world -94 91 32 -90 0
 

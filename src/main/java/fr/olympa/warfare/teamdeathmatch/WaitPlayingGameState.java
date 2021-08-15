@@ -4,7 +4,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
-import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.scheduler.BukkitTask;
@@ -32,6 +31,7 @@ public class WaitPlayingGameState extends GameState {
 	
 	@Override
 	public void start(GameState from) {
+		tdm.setInGame(true);
 		for (Team team : Team.values()) {
 			team.getPlayers().forEach(x -> {
 				x.teleport(team.getSpawnpoint()); // avant super.start() comme ça le move n'est pas cancel
@@ -63,12 +63,6 @@ public class WaitPlayingGameState extends GameState {
 	@Override
 	protected void handleScoreboard(Scoreboard<OlympaPlayerWarfare> scoreboard) {
 		scoreboard.addLines(FixedLine.EMPTY_LINE, LINE_TITLE, FixedLine.EMPTY_LINE, OlympaPlayerWarfare.LINE_KIT);
-	}
-	
-	@EventHandler
-	public void onPreLogin(AsyncPlayerPreLoginEvent e) {
-		e.setLoginResult(AsyncPlayerPreLoginEvent.Result.KICK_OTHER);
-		e.setKickMessage("La partie a déjà commencé.");
 	}
 	
 	@EventHandler (priority = EventPriority.HIGHEST)

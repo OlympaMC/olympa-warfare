@@ -364,7 +364,7 @@ public enum GunType implements ItemStackable {
 			CommonGunConstants.KNOCKBACK_MEDIUM,
 			CommonGunConstants.BULLET_SPEED_HIGH,
 			GunAccuracy.HIGH,
-			null,
+			new AttributeModifier(Gun.ZOOM_UUID, "zoom", Operation.ADD_MULTIPLICATOR, -1),
 			5,
 			6,
 			BulletSimple::new,

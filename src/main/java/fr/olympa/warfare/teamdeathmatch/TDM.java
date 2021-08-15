@@ -8,6 +8,7 @@ import org.bukkit.event.EventPriority;
 import org.spigotmc.SpigotConfig;
 
 import fr.olympa.api.common.player.OlympaPlayer;
+import fr.olympa.api.common.server.ServerStatus;
 import fr.olympa.api.spigot.scoreboard.tab.INametagApi.NametagHandler;
 import fr.olympa.api.spigot.scoreboard.tab.Nametag;
 import fr.olympa.api.spigot.utils.SpigotUtils;
@@ -23,11 +24,15 @@ public class TDM {
 	private GameState state;
 	private int minPlayers;
 	
+	private ServerStatus defaultStatus;
+	private boolean inGame = false;
+	
 	public TDM(OlympaWarfare plugin, int minPlayers) {
 		this.plugin = plugin;
 		this.minPlayers = minPlayers;
 		setState(WaitingGameState::new);
 		SpigotConfig.disablePlayerDataSaving = true;
+		//ukkit.getWorld("world").getWorldBorder().setSize(500);
 		
 		OlympaCore.getInstance().getNameTagApi().addNametagHandler(EventPriority.HIGHEST, new NametagHandler() {
 			@Override
@@ -69,6 +74,20 @@ public class TDM {
 		}
 		SpigotUtils.broadcastMessage(Prefix.BROADCAST.formatMessage("Arrêt de ce serveur de jeu..."));
 		Bukkit.shutdown();
+	}
+	
+	public void setInGame(boolean inGame) {
+		if (this.inGame == inGame) return;
+		if (inGame) {
+			defaultStatus = OlympaCore.getInstance().getStatus();
+			OlympaCore.getInstance().setStatus(ServerStatus.IN_GAME);
+		}else {
+			OlympaCore.getInstance().setStatus(defaultStatus);
+		}
+	}
+	
+	public boolean isInGame() {
+		return inGame;
 	}
 	
 	public int getMinPlayers() {
