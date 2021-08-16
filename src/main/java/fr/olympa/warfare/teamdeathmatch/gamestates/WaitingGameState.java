@@ -1,4 +1,4 @@
-package fr.olympa.warfare.teamdeathmatch;
+package fr.olympa.warfare.teamdeathmatch.gamestates;
 
 import java.util.Arrays;
 
@@ -18,6 +18,9 @@ import fr.olympa.api.spigot.lines.TimerLine;
 import fr.olympa.api.spigot.scoreboard.sign.Scoreboard;
 import fr.olympa.api.utils.Prefix;
 import fr.olympa.warfare.OlympaPlayerWarfare;
+import fr.olympa.warfare.teamdeathmatch.GameState;
+import fr.olympa.warfare.teamdeathmatch.TDM;
+import fr.olympa.warfare.teamdeathmatch.Team;
 
 public class WaitingGameState extends GameState {
 	
@@ -38,6 +41,12 @@ public class WaitingGameState extends GameState {
 				return "§8> §7Début dans\n§a  §l" + countdown + "§7§l secondes §7!";
 			}
 		}, tdm.getPlugin(), 2);
+	}
+	
+	@Override
+	public void start(GameState from) {
+		super.start(from);
+		updateCountdown(Bukkit.getOnlinePlayers().size());
 	}
 	
 	@Override
@@ -88,7 +97,7 @@ public class WaitingGameState extends GameState {
 		int min = tdm.getMinPlayers();
 		if (online == min) {
 			if (task != null) return;
-			countdown = 60;
+			countdown = 30;
 			task = Bukkit.getScheduler().runTaskTimer(tdm.getPlugin(), () -> {
 				if (countdown == 0) {
 					tdm.setState(ChooseClassGameState::new);

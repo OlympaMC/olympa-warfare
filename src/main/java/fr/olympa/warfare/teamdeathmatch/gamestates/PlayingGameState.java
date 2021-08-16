@@ -1,12 +1,17 @@
-package fr.olympa.warfare.teamdeathmatch;
+package fr.olympa.warfare.teamdeathmatch.gamestates;
 
 import java.text.DecimalFormat;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.StringJoiner;
 
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
@@ -20,35 +25,67 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitTask;
+import org.jetbrains.annotations.NotNull;
 
 import fr.olympa.api.common.groups.OlympaGroup;
 import fr.olympa.api.common.server.ServerStatus;
 import fr.olympa.api.spigot.lines.DynamicLine;
 import fr.olympa.api.spigot.lines.FixedLine;
+import fr.olympa.api.spigot.lines.FixedUpdatableLine;
 import fr.olympa.api.spigot.scoreboard.sign.Scoreboard;
 import fr.olympa.api.spigot.utils.SpigotUtils;
 import fr.olympa.api.utils.Prefix;
+import fr.olympa.api.utils.Utils;
 import fr.olympa.core.spigot.OlympaCore;
 import fr.olympa.warfare.OlympaPlayerWarfare;
+import fr.olympa.warfare.OlympaWarfare;
 import fr.olympa.warfare.classes.WarfareClass;
+import fr.olympa.warfare.teamdeathmatch.GameState;
+import fr.olympa.warfare.teamdeathmatch.GameStep;
+import fr.olympa.warfare.teamdeathmatch.TDM;
+import fr.olympa.warfare.teamdeathmatch.Team;
 import fr.olympa.warfare.weapons.WeaponsListener;
 
 public class PlayingGameState extends GameState {
+	
+	private static final PotionEffect GLOWING_EFFECT = new PotionEffect(PotionEffectType.GLOWING, 9999999, 0, false, false, false);
+	
+	private DecimalFormat format = new DecimalFormat("0.#");
 
 	private List<Player> living = new ArrayList<>();
 	private List<Team> going = new ArrayList<>();
 	
-	private final DynamicLine<Scoreboard<OlympaPlayerWarfare>> LINE_TEAM;
-	//private final DynamicLine<Scoreboard<OlympaPlayerWarfare>> LINE_STEP;
+	private Map<Player, BukkitTask> inRespawn = new HashMap<>();
 	
-	private GameStep nextStep = GameStep.GLOWING;
+	private final DynamicLine<Scoreboard<OlympaPlayerWarfare>> LINE_TEAM;
+	private final FixedUpdatableLine<Scoreboard<OlympaPlayerWarfare>> LINE_STEP;
+	
+	private GameStep currentStep;
+	
+	private GameStep nextStep;
+	private BukkitTask task;
+	private int nextStepSeconds;
 	
 	public PlayingGameState(TDM tdm) {
 		super(tdm);
 		tdm.setInGame(true);
 		
 		LINE_TEAM = new DynamicLine<>(x -> Team.getPlayerTeam((Player) x.getOlympaPlayer().getPlayer()).getName());
-		//LINE_STEP = new DynamicLine<>(x -> )
+		LINE_STEP = new FixedUpdatableLine<>(() -> {
+			StringJoiner joiner = new StringJoiner("\n");
+			if (currentStep != null) {
+				joiner.add("§7Phase en cours:");
+				joiner.add("§6 §l§n" + currentStep.getTitle());
+			}
+			if (nextStep != null) {
+				joiner.add("§7Prochaine phase:");
+				joiner.add("§6 §l" + nextStep.getTitle() + "§e (" + Utils.durationToString(format, nextStepSeconds * 1000, false) + ")");
+			}
+			return joiner.toString();
+		});
+		
+		setNextStep(GameStep.GLOWING);
 	}
 	
 	@Override
@@ -65,9 +102,38 @@ public class PlayingGameState extends GameState {
 		});
 		living.forEach(x -> OlympaCore.getInstance().getNameTagApi().callNametagUpdate(OlympaPlayerWarfare.get(x)));
 		
-		//task = Bukkit.getScheduler().runTaskLater(null, null, 0)
+		task = Bukkit.getScheduler().runTaskTimer(tdm.getPlugin(), () -> {
+			if (--nextStepSeconds == 0) {
+				currentStep = nextStep;
+				if (GameStep.values().length > currentStep.ordinal() + 1) {
+					setNextStep(GameStep.values()[currentStep.ordinal() + 1]);
+				}else {
+					nextStep = null;
+				}
+				
+				if (currentStep == GameStep.GLOWING) {
+					living.forEach(x -> {
+						x.setGlowing(true);
+						x.addPotionEffect(GLOWING_EFFECT);
+					});
+				}
+				Prefix.BROADCAST.sendMessage(Bukkit.getOnlinePlayers(), "§lLa phase §e§l%s§7§l a débuté !", currentStep.getTitle());
+			}
+			LINE_STEP.updateGlobal();
+		}, 20, 20);
 	}
 	
+	@Override
+	public void stop() {
+		super.stop();
+		inRespawn.values().forEach(BukkitTask::cancel);
+		task.cancel();
+	}
+	
+	private void setNextStep(GameStep step) {
+		nextStep = step;
+		nextStepSeconds = step.getWait();
+	}
 
 	@EventHandler (priority = EventPriority.HIGHEST)
 	public void onQuit(PlayerQuitEvent e) {
@@ -84,7 +150,7 @@ public class PlayingGameState extends GameState {
 	
 	@Override
 	protected void handleScoreboard(Scoreboard<OlympaPlayerWarfare> scoreboard) {
-		scoreboard.addLines(FixedLine.EMPTY_LINE, OlympaPlayerWarfare.LINE_LIVES, FixedLine.EMPTY_LINE, OlympaPlayerWarfare.LINE_CLASS, FixedLine.EMPTY_LINE, LINE_TEAM);
+		scoreboard.addLines(FixedLine.EMPTY_LINE, LINE_TEAM, FixedLine.EMPTY_LINE, OlympaPlayerWarfare.LINE_LIVES, OlympaPlayerWarfare.LINE_CLASS, FixedLine.EMPTY_LINE, LINE_STEP);
 	}
 	
 	@Override
@@ -99,13 +165,11 @@ public class PlayingGameState extends GameState {
 			if (other != null) {
 				Team otherTeam = Team.getPlayerTeam(other);
 				Team team = Team.getPlayerTeam(p);
-				return otherTeam == team;
+				return otherTeam == team || other.hasPotionEffect(PotionEffectType.INVISIBILITY) || p.hasPotionEffect(PotionEffectType.INVISIBILITY);
 			}
 		}
 		return false;
 	}
-	
-	private DecimalFormat format = new DecimalFormat("0.#");
 	
 	@EventHandler
 	public void onPlayerDeath(PlayerDeathEvent e) {
@@ -143,7 +207,7 @@ public class PlayingGameState extends GameState {
 			}
 			
 		}
-		if (!legitKill) e.setDeathMessage("§c☠ " + team.getColor() + "§l" + dead.getName() + "§7 est mort. ~ " + deadOP.lives.get() + "§c❤");
+		if (!legitKill) e.setDeathMessage("§c☠ " + team.getColor() + "§l" + dead.getName() + "§7 est mort. ~ " + deadOP.lives.get() + " §c❤");
 		
 		e.setDroppedExp(0);
 		e.getDrops().clear();
@@ -171,13 +235,37 @@ public class PlayingGameState extends GameState {
 	
 	@EventHandler
 	public void onRespawn(PlayerRespawnEvent e) {
-		Team team = Team.getPlayerTeam(e.getPlayer());
-		e.setRespawnLocation(team.getSpawnpoint());
-		OlympaPlayerWarfare player = OlympaPlayerWarfare.get(e.getPlayer());
-		if (player.lives.get() <= 0) {
-			e.getPlayer().setGameMode(GameMode.SPECTATOR);
-		}else {
-			e.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 5 * 20, 1, false, false));
+		Player p = e.getPlayer();
+		e.setRespawnLocation(OlympaWarfare.getInstance().waitRespawnLocation);
+		p.setGameMode(GameMode.SPECTATOR);
+		OlympaPlayerWarfare player = OlympaPlayerWarfare.get(p);
+		if (player.lives.get() > 0) {
+			Team team = Team.getPlayerTeam(p);
+			inRespawn.put(p, Bukkit.getScheduler().runTaskTimer(tdm.getPlugin(), new @NotNull Runnable() {
+				int countdown = 5;
+				
+				@Override
+				public void run() {
+					if (--countdown == 0) {
+						inRespawn.remove(p).cancel();
+						p.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 6 * 20, 0, false, false, true));
+						if (currentStep == GameStep.GLOWING) p.addPotionEffect(GLOWING_EFFECT);
+						List<Location> other = new ArrayList<>();
+						for (Team otherTeam : Team.values()) {
+							if (team != otherTeam) other.addAll(otherTeam.getPlayers().stream().filter(x -> !inRespawn.containsKey(x)).map(Player::getLocation).toList());
+						}
+						p.teleport(team.getSpawnpoints().stream().map(spawnpoint -> {
+							int minDistance = 10000;
+							for (Location otherPlayer : other) {
+								int distance = (int) otherPlayer.distanceSquared(spawnpoint);
+								if (distance < minDistance) minDistance = distance;
+							}
+							return new AbstractMap.SimpleEntry<>(spawnpoint, minDistance);
+						}).sorted((o1, o2) -> Integer.compare(o2.getValue(), o1.getValue())).findFirst().get().getKey());
+						p.setGameMode(GameMode.ADVENTURE);
+					}else p.sendTitle("§cTu es mort", "§7Respawn dans §c§l" + countdown + " secondes§7...", 0, 20, 2);
+				}
+			}, 0, 20));
 		}
 	}
 	

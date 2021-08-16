@@ -1,4 +1,4 @@
-package fr.olympa.warfare.teamdeathmatch;
+package fr.olympa.warfare.teamdeathmatch.gamestates;
 
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -15,6 +15,9 @@ import fr.olympa.api.utils.Prefix;
 import fr.olympa.warfare.OlympaPlayerWarfare;
 import fr.olympa.warfare.OlympaWarfare;
 import fr.olympa.warfare.classes.WarfareClass;
+import fr.olympa.warfare.teamdeathmatch.GameState;
+import fr.olympa.warfare.teamdeathmatch.TDM;
+import fr.olympa.warfare.teamdeathmatch.Team;
 
 public class WaitPlayingGameState extends GameState {
 	
@@ -34,7 +37,7 @@ public class WaitPlayingGameState extends GameState {
 		tdm.setInGame(true);
 		for (Team team : Team.values()) {
 			team.getPlayers().forEach(x -> {
-				x.teleport(team.getSpawnpoint()); // avant super.start() comme ça le move n'est pas cancel
+				x.teleport(team.getSpawnpoints().get(0)); // avant super.start() comme ça le move n'est pas cancel
 				OlympaPlayerWarfare player = OlympaPlayerWarfare.get(x);
 				if (player.usedClass.isEmpty()) {
 					player.usedClass.set(defaultKit);
@@ -62,7 +65,7 @@ public class WaitPlayingGameState extends GameState {
 	
 	@Override
 	protected void handleScoreboard(Scoreboard<OlympaPlayerWarfare> scoreboard) {
-		scoreboard.addLines(FixedLine.EMPTY_LINE, LINE_TITLE, FixedLine.EMPTY_LINE, OlympaPlayerWarfare.LINE_CLASS);
+		scoreboard.addLines(FixedLine.EMPTY_LINE, LINE_TITLE, OlympaPlayerWarfare.LINE_CLASS);
 	}
 	
 	@EventHandler (priority = EventPriority.HIGHEST)

@@ -15,6 +15,8 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.RayTraceResult;
 
 import fr.olympa.api.spigot.utils.SpigotUtils;
+import fr.olympa.warfare.OlympaPlayerWarfare;
+import fr.olympa.warfare.WarfarePermissions;
 
 public enum Knife implements Weapon, ItemStackable {
 	
@@ -78,7 +80,11 @@ public enum Knife implements Weapon, ItemStackable {
 	
 	@Override
 	public void giveItems(Player p) {
-		p.getInventory().addItem(item.clone());
+		ItemStack item = this.item.clone();
+		if (WarfarePermissions.GROUP_SURVIVANT.hasPermission(OlympaPlayerWarfare.get(p))) {
+			setSkin(Skin.GOLD, item);
+		}
+		p.getInventory().addItem(item);
 	}
 	
 	public boolean isItem(ItemStack item) {

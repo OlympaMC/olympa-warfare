@@ -17,4 +17,6 @@ public class WarfarePermissions {
 	public static final OlympaSpigotPermission LEVEL_COMMAND_OTHER = new OlympaSpigotPermission(OlympaGroup.ASSISTANT);
 	public static final OlympaSpigotPermission LEVEL_COMMAND_MANAGE = new OlympaSpigotPermission(OlympaGroup.RESP);
 	
+	public static final OlympaSpigotPermission TDM_COMMAND_MANAGE = new OlympaSpigotPermission(OlympaGroup.RESP);
+	
 }

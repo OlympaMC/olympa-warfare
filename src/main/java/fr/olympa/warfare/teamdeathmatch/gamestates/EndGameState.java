@@ -1,4 +1,4 @@
-package fr.olympa.warfare.teamdeathmatch;
+package fr.olympa.warfare.teamdeathmatch.gamestates;
 
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
@@ -25,6 +25,9 @@ import fr.olympa.api.utils.Prefix;
 import fr.olympa.api.utils.Utils;
 import fr.olympa.core.spigot.OlympaCore;
 import fr.olympa.warfare.OlympaPlayerWarfare;
+import fr.olympa.warfare.teamdeathmatch.GameState;
+import fr.olympa.warfare.teamdeathmatch.TDM;
+import fr.olympa.warfare.teamdeathmatch.Team;
 
 public class EndGameState extends GameState {
 	

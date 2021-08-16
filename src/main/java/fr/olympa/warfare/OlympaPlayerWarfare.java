@@ -48,16 +48,13 @@ public class OlympaPlayerWarfare extends OlympaPlayerObject {
 	public void loaded() {
 		level.observe("datas", () -> COLUMN_LEVEL.updateAsync(this, level.get(), null, null));
 		level.observe("levelManagement", new LevelManagement(this));
-		level.observe("scoreboard_update", () -> OlympaWarfare.getInstance().lineLevel.updateHolder(OlympaWarfare.getInstance().scoreboards.getPlayerScoreboard(this)));
 		level.observe("tab_update", () -> OlympaCore.getInstance().getNameTagApi().callNametagUpdate(this));
 		level.observe("xp_bar", this::updateXPBar);
 		xp.observe("datas", () -> COLUMN_XP.updateAsync(this, xp.get(), null, null));
 		xp.observe("xpManagement", new XPManagement(this));
-		xp.observe("scoreboard_update", () -> OlympaWarfare.getInstance().lineLevel.updateHolder(OlympaWarfare.getInstance().scoreboards.getPlayerScoreboard(this)));
 		xp.observe("xp_bar", this::updateXPBar);
 		kills.observe("datas", () -> COLUMN_KILLS.updateAsync(this, kills.get(), null, null));
 		kills.observe("ranking", () -> OlympaWarfare.getInstance().totalKillRank.handleNewScore(getName(), (Player) getPlayer(), kills.get()));
-		kills.observe("scoreboard_update", () -> OlympaWarfare.getInstance().lineKills.updateHolder(OlympaWarfare.getInstance().scoreboards.getPlayerScoreboard(this)));
 		usedClass.observe("scoreboard_update", () -> LINE_CLASS.updateHolder(OlympaWarfare.getInstance().scoreboards.getPlayerScoreboard(this)));
 		lives.observe("scoreboard_update", () -> LINE_LIVES.updateHolder(OlympaWarfare.getInstance().scoreboards.getPlayerScoreboard(this)));
 		lives.observe("tab_update", () -> OlympaCore.getInstance().getNameTagApi().callNametagUpdate(this));

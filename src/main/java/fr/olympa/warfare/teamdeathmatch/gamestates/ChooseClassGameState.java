@@ -1,4 +1,4 @@
-package fr.olympa.warfare.teamdeathmatch;
+package fr.olympa.warfare.teamdeathmatch.gamestates;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,10 +27,13 @@ import fr.olympa.api.utils.Prefix;
 import fr.olympa.warfare.OlympaPlayerWarfare;
 import fr.olympa.warfare.OlympaWarfare;
 import fr.olympa.warfare.classes.ClassListGUI;
+import fr.olympa.warfare.teamdeathmatch.GameState;
+import fr.olympa.warfare.teamdeathmatch.TDM;
+import fr.olympa.warfare.teamdeathmatch.Team;
 
 public class ChooseClassGameState extends GameState {
 	
-	private final int waitSeconds = 20;
+	private final int waitSeconds = 15;
 	
 	private final FixedLine<Scoreboard<OlympaPlayerWarfare>> LINE_TITLE = new FixedLine<>("§8> §7La partie va commencer.\n\n§8> §eChoisissez votre classe!");
 	

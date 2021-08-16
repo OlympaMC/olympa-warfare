@@ -16,6 +16,7 @@ import fr.olympa.api.utils.Prefix;
 import fr.olympa.core.spigot.OlympaCore;
 import fr.olympa.warfare.OlympaPlayerWarfare;
 import fr.olympa.warfare.OlympaWarfare;
+import fr.olympa.warfare.teamdeathmatch.gamestates.WaitingGameState;
 
 public class TDM {
 	
@@ -47,6 +48,8 @@ public class TDM {
 				return team == null ? null : team.ordinal();
 			}
 		});
+		
+		new TDMCommand(this).register();
 	}
 	
 	public OlympaWarfare getPlugin() {

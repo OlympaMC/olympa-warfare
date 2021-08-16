@@ -5,19 +5,19 @@ public enum GameStep {
 	/*SHRINK_1(),
 	SHRINK_2(),*/
 	GLOWING(
-			10 * 60 * 20,
+			4 * 60,
 			"Brillance"),
 			;
 	
-	private long wait;
+	private int wait;
 	private String title;
 	
-	private GameStep(long wait, String title) {
+	private GameStep(int wait, String title) {
 		this.wait = wait;
 		this.title = title;
 	}
 	
-	public long getWait() {
+	public int getWait() {
 		return wait;
 	}
 	

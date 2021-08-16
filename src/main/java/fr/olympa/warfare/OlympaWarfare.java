@@ -13,17 +13,14 @@ import fr.olympa.api.common.plugin.OlympaAPIPlugin;
 import fr.olympa.api.common.provider.AccountProviderAPI;
 import fr.olympa.api.common.server.OlympaServer;
 import fr.olympa.api.spigot.lines.CyclingLine;
-import fr.olympa.api.spigot.lines.DynamicLine;
 import fr.olympa.api.spigot.lines.FixedLine;
 import fr.olympa.api.spigot.region.Region;
 import fr.olympa.api.spigot.region.tracking.ActionResult;
 import fr.olympa.api.spigot.region.tracking.RegionEvent.EntryEvent;
 import fr.olympa.api.spigot.region.tracking.flags.*;
-import fr.olympa.api.spigot.scoreboard.sign.Scoreboard;
 import fr.olympa.api.spigot.scoreboard.sign.ScoreboardManager;
 import fr.olympa.api.spigot.utils.ProtocolAPI;
 import fr.olympa.core.spigot.OlympaCore;
-import fr.olympa.warfare.ranking.BestKillStreakRank;
 import fr.olympa.warfare.ranking.TotalKillRank;
 import fr.olympa.warfare.teamdeathmatch.TDM;
 import fr.olympa.warfare.weapons.guns.GunFlag;
@@ -42,15 +39,11 @@ public class OlympaWarfare extends OlympaAPIPlugin {
 	public GunRegistry gunRegistry;
 
 	public ScoreboardManager<OlympaPlayerWarfare> scoreboards;
-	public DynamicLine<Scoreboard<OlympaPlayerWarfare>> lineKills = new DynamicLine<>(x -> "§7Kills: §6" + x.getOlympaPlayer().getKills().get());
-	public DynamicLine<Scoreboard<OlympaPlayerWarfare>> lineLevel = new DynamicLine<>(x -> "§7Niveau: §6" + x.getOlympaPlayer().getLevel() + " §e(" + XPManagement.formatExperience(x.getOlympaPlayer().getXP()) + "/"
-			+ XPManagement.formatExperience(XPManagement.getXPToLevelUp(x.getOlympaPlayer().getLevel())) + ")");
 
 	public TotalKillRank totalKillRank;
-	public BestKillStreakRank bestKSRank;
 
-	public Location pvpLocation;
 	public Region safeZone;
+	public Location waitRespawnLocation;
 
 	public ResourcePackCommand resourcePackCommand;
 	
@@ -81,7 +74,7 @@ public class OlympaWarfare extends OlympaAPIPlugin {
 						FixedLine.EMPTY_LINE,
 						CyclingLine.olympaAnimation());
 
-		pvpLocation = getConfig().getLocation("pvpLocation");
+		waitRespawnLocation = getConfig().getLocation("waitRespawnLocation");
 		safeZone = getConfig().getSerializable("safeZone", Region.class);
 		OlympaCore.getInstance().getRegionManager().registerRegion(safeZone, "safeZone", EventPriority.HIGH, new DamageFlag(false));
 		OlympaCore.getInstance().getRegionManager().registerRegion(getConfig().getSerializable("killbox", Region.class), "killbox", EventPriority.HIGH, new Flag() {
