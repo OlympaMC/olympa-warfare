@@ -18,7 +18,7 @@ import fr.olympa.api.common.sql.SQLColumn;
 import fr.olympa.api.spigot.lines.DynamicLine;
 import fr.olympa.api.spigot.scoreboard.sign.Scoreboard;
 import fr.olympa.core.spigot.OlympaCore;
-import fr.olympa.warfare.kits.Kits;
+import fr.olympa.warfare.classes.WarfareClass;
 import fr.olympa.warfare.xp.LevelManagement;
 import fr.olympa.warfare.xp.XPManagement;
 
@@ -34,10 +34,10 @@ public class OlympaPlayerWarfare extends OlympaPlayerObject {
 	private ObservableDouble xp = new ObservableDouble(0);
 	private ObservableInt kills = new ObservableInt(0);
 
-	public final ObservableValue<Kits> usedKit = new ObservableValue<>(null);
+	public final ObservableValue<WarfareClass> usedClass = new ObservableValue<>(null);
 	public final ObservableInt lives = new ObservableInt(3);
 	
-	public static final DynamicLine<Scoreboard<OlympaPlayerWarfare>> LINE_KIT = new DynamicLine<>(x -> "§7§lKit: §a§l" + x.getOlympaPlayer().usedKit.mapOr(Kits::getName, "§cnon choisi"));
+	public static final DynamicLine<Scoreboard<OlympaPlayerWarfare>> LINE_CLASS = new DynamicLine<>(x -> "§7§lClasse: §a§l" + x.getOlympaPlayer().usedClass.mapOr(WarfareClass::getName, "§cnon choisi"));
 	public static final DynamicLine<Scoreboard<OlympaPlayerWarfare>> LINE_LIVES = new DynamicLine<>(x -> "§7§lVies: " + x.getOlympaPlayer().getLivesString());
 
 	public OlympaPlayerWarfare(UUID uuid, String name, String ip) {
@@ -58,7 +58,7 @@ public class OlympaPlayerWarfare extends OlympaPlayerObject {
 		kills.observe("datas", () -> COLUMN_KILLS.updateAsync(this, kills.get(), null, null));
 		kills.observe("ranking", () -> OlympaWarfare.getInstance().totalKillRank.handleNewScore(getName(), (Player) getPlayer(), kills.get()));
 		kills.observe("scoreboard_update", () -> OlympaWarfare.getInstance().lineKills.updateHolder(OlympaWarfare.getInstance().scoreboards.getPlayerScoreboard(this)));
-		usedKit.observe("scoreboard_update", () -> LINE_KIT.updateHolder(OlympaWarfare.getInstance().scoreboards.getPlayerScoreboard(this)));
+		usedClass.observe("scoreboard_update", () -> LINE_CLASS.updateHolder(OlympaWarfare.getInstance().scoreboards.getPlayerScoreboard(this)));
 		lives.observe("scoreboard_update", () -> LINE_LIVES.updateHolder(OlympaWarfare.getInstance().scoreboards.getPlayerScoreboard(this)));
 		lives.observe("tab_update", () -> OlympaCore.getInstance().getNameTagApi().callNametagUpdate(this));
 	}

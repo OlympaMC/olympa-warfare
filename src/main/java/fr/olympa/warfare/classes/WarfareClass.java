@@ -1,4 +1,4 @@
-package fr.olympa.warfare.kits;
+package fr.olympa.warfare.classes;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,7 +14,7 @@ import fr.olympa.warfare.weapons.ItemStackable;
 import fr.olympa.warfare.weapons.Knife;
 import fr.olympa.warfare.weapons.guns.GunType;
 
-public enum Kits {
+public enum WarfareClass {
 	
 	SOLDAT(
 			1,
@@ -59,7 +59,7 @@ public enum Kits {
 	
 	private ItemStack itemValid, itemInvalid;
 	
-	private Kits(int minLevel, String name, ItemStackable... stackables) {
+	private WarfareClass(int minLevel, String name, ItemStackable... stackables) {
 		this.minLevel = minLevel;
 		this.name = name;
 		this.stackables = stackables;
@@ -71,9 +71,9 @@ public enum Kits {
 		}
 		lore.add("");
 		lore.add("§a✔ §7Niveau " + minLevel);
-		itemValid = ItemUtils.name(ItemUtils.setRawLore(stackables[0].getDemoItem().clone(), lore), "§7Kit §l" + name);
+		itemValid = ItemUtils.name(ItemUtils.setRawLore(stackables[0].getDemoItem().clone(), lore), "§7Classe §l" + name);
 		lore.set(lore.size() - 1, "§c✖ §7Niveau " + minLevel);
-		itemInvalid = ItemUtils.name(ItemUtils.setRawLore(stackables[0].getDemoItem().clone(), lore), "§7Kit §l" + name);
+		itemInvalid = ItemUtils.name(ItemUtils.setRawLore(stackables[0].getDemoItem().clone(), lore), "§7Classe §l" + name);
 	}
 	
 	public int getMinLevel() {
@@ -92,7 +92,7 @@ public enum Kits {
 		for (ItemStackable stackable : stackables) {
 			stackable.giveItems(p);
 		}
-		Prefix.DEFAULT_GOOD.sendMessage(p, "Tu as reçu le kit §l%s", name);
+		Prefix.DEFAULT_GOOD.sendMessage(p, "Tu as reçu la classe §l%s", name);
 	}
 	
 }

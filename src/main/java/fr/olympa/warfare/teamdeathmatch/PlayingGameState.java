@@ -30,7 +30,7 @@ import fr.olympa.api.spigot.utils.SpigotUtils;
 import fr.olympa.api.utils.Prefix;
 import fr.olympa.core.spigot.OlympaCore;
 import fr.olympa.warfare.OlympaPlayerWarfare;
-import fr.olympa.warfare.kits.Kits;
+import fr.olympa.warfare.classes.WarfareClass;
 import fr.olympa.warfare.weapons.WeaponsListener;
 
 public class PlayingGameState extends GameState {
@@ -84,7 +84,7 @@ public class PlayingGameState extends GameState {
 	
 	@Override
 	protected void handleScoreboard(Scoreboard<OlympaPlayerWarfare> scoreboard) {
-		scoreboard.addLines(FixedLine.EMPTY_LINE, OlympaPlayerWarfare.LINE_LIVES, FixedLine.EMPTY_LINE, OlympaPlayerWarfare.LINE_KIT, FixedLine.EMPTY_LINE, LINE_TEAM);
+		scoreboard.addLines(FixedLine.EMPTY_LINE, OlympaPlayerWarfare.LINE_LIVES, FixedLine.EMPTY_LINE, OlympaPlayerWarfare.LINE_CLASS, FixedLine.EMPTY_LINE, LINE_TEAM);
 	}
 	
 	@Override
@@ -118,11 +118,11 @@ public class PlayingGameState extends GameState {
 		deadOP.lives.decrement();
 		Team team = Team.getPlayerTeam(dead);
 		if (killer != null) {
-			Kits deadKit = deadOP.usedKit.get();
+			WarfareClass deadKit = deadOP.usedClass.get();
 			OlympaPlayerWarfare killerOP = OlympaPlayerWarfare.get(killer);
-			Kits killerKit = null;
+			WarfareClass killerKit = null;
 			if (killerOP != null)
-				killerKit = killerOP.usedKit.get();
+				killerKit = killerOP.usedClass.get();
 			if (deadKit != null && killerKit != null) {
 				
 				double xpGain = 1;

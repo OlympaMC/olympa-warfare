@@ -91,7 +91,7 @@ public class WaitingGameState extends GameState {
 			countdown = 60;
 			task = Bukkit.getScheduler().runTaskTimer(tdm.getPlugin(), () -> {
 				if (countdown == 0) {
-					tdm.setState(KitGameState::new);
+					tdm.setState(ChooseClassGameState::new);
 					task.cancel();
 					task = null;
 				}

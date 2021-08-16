@@ -26,17 +26,17 @@ import fr.olympa.api.spigot.scoreboard.sign.Scoreboard;
 import fr.olympa.api.utils.Prefix;
 import fr.olympa.warfare.OlympaPlayerWarfare;
 import fr.olympa.warfare.OlympaWarfare;
-import fr.olympa.warfare.kits.KitListGUI;
+import fr.olympa.warfare.classes.ClassListGUI;
 
-public class KitGameState extends GameState {
+public class ChooseClassGameState extends GameState {
 	
 	private final int waitSeconds = 20;
 	
-	private final FixedLine<Scoreboard<OlympaPlayerWarfare>> LINE_TITLE = new FixedLine<>("§8> §7La partie va commencer.\n\n§8> §eChoisissez votre kit!");
+	private final FixedLine<Scoreboard<OlympaPlayerWarfare>> LINE_TITLE = new FixedLine<>("§8> §7La partie va commencer.\n\n§8> §eChoisissez votre classe!");
 	
 	private BukkitTask task;
 	
-	public KitGameState(TDM tdm) {
+	public ChooseClassGameState(TDM tdm) {
 		super(tdm);
 	}
 	
@@ -97,15 +97,15 @@ public class KitGameState extends GameState {
 		
 		players.forEach(this::playerInventory);
 		
-		Prefix.BROADCAST.sendMessage(players, "Choisissez votre kit ! La partie commence dans %d secondes.", waitSeconds);
+		Prefix.BROADCAST.sendMessage(players, "Choisissez votre classe ! La partie commence dans %d secondes.", waitSeconds);
 		task = Bukkit.getScheduler().runTaskLater(OlympaWarfare.getInstance(), () -> tdm.setState(WaitPlayingGameState::new), waitSeconds * 20L);
 	}
 	
 	private void playerInventory(Player p) {
 		PlayerInventory inventory = p.getInventory();
 		inventory.clear();
-		inventory.setItem(4, ItemUtils.item(Material.NETHER_STAR, "§bChoisis ton kit"));
-		new KitListGUI(OlympaPlayerWarfare.get(p)).create(p);
+		inventory.setItem(4, ItemUtils.item(Material.NETHER_STAR, "§bChoisis ta classe"));
+		new ClassListGUI(OlympaPlayerWarfare.get(p)).create(p);
 	}
 	
 	@Override
@@ -116,7 +116,7 @@ public class KitGameState extends GameState {
 	
 	@Override
 	protected void handleScoreboard(Scoreboard<OlympaPlayerWarfare> scoreboard) {
-		scoreboard.addLines(FixedLine.EMPTY_LINE, LINE_TITLE, FixedLine.EMPTY_LINE, OlympaPlayerWarfare.LINE_KIT);
+		scoreboard.addLines(FixedLine.EMPTY_LINE, LINE_TITLE, FixedLine.EMPTY_LINE, OlympaPlayerWarfare.LINE_CLASS);
 	}
 	
 	@EventHandler (priority = EventPriority.HIGHEST)
@@ -147,7 +147,7 @@ public class KitGameState extends GameState {
 		if (e.getItem() == null) return;
 		Player p = e.getPlayer();
 		if (p.getInventory().getHeldItemSlot() == 4) {
-			new KitListGUI(OlympaPlayerWarfare.get(p)).create(p);
+			new ClassListGUI(OlympaPlayerWarfare.get(p)).create(p);
 			e.setCancelled(true);
 		}
 	}

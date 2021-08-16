@@ -14,11 +14,11 @@ import fr.olympa.api.spigot.utils.SpigotUtils;
 import fr.olympa.api.utils.Prefix;
 import fr.olympa.warfare.OlympaPlayerWarfare;
 import fr.olympa.warfare.OlympaWarfare;
-import fr.olympa.warfare.kits.Kits;
+import fr.olympa.warfare.classes.WarfareClass;
 
 public class WaitPlayingGameState extends GameState {
 	
-	private final Kits defaultKit = Kits.SOLDAT;
+	private final WarfareClass defaultKit = WarfareClass.SOLDAT;
 	
 	private final FixedLine<Scoreboard<OlympaPlayerWarfare>> LINE_TITLE = new FixedLine<>("§8> §7Début de la partie...");
 	
@@ -36,12 +36,12 @@ public class WaitPlayingGameState extends GameState {
 			team.getPlayers().forEach(x -> {
 				x.teleport(team.getSpawnpoint()); // avant super.start() comme ça le move n'est pas cancel
 				OlympaPlayerWarfare player = OlympaPlayerWarfare.get(x);
-				if (player.usedKit.isEmpty()) {
-					player.usedKit.set(defaultKit);
-					Prefix.DEFAULT.sendMessage(x, "Le kit %s t'as été donné par défaut.", defaultKit.getName());
+				if (player.usedClass.isEmpty()) {
+					player.usedClass.set(defaultKit);
+					Prefix.DEFAULT.sendMessage(x, "La classe %s t'as été donnée par défaut.", defaultKit.getName());
 				}
 				x.getInventory().clear();
-				player.usedKit.get().give(x);
+				player.usedClass.get().give(x);
 				x.sendTitle("§6Warfare", "§7Début dans §c5 secondes", 10, 20, 0);
 				x.setGameMode(GameMode.ADVENTURE);
 			});
@@ -62,7 +62,7 @@ public class WaitPlayingGameState extends GameState {
 	
 	@Override
 	protected void handleScoreboard(Scoreboard<OlympaPlayerWarfare> scoreboard) {
-		scoreboard.addLines(FixedLine.EMPTY_LINE, LINE_TITLE, FixedLine.EMPTY_LINE, OlympaPlayerWarfare.LINE_KIT);
+		scoreboard.addLines(FixedLine.EMPTY_LINE, LINE_TITLE, FixedLine.EMPTY_LINE, OlympaPlayerWarfare.LINE_CLASS);
 	}
 	
 	@EventHandler (priority = EventPriority.HIGHEST)
