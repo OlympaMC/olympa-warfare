@@ -15,6 +15,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -98,6 +99,12 @@ public class EndGameState extends GameState {
 	@EventHandler (priority = EventPriority.HIGH)
 	public void onChat(AsyncPlayerChatEvent e) {
 		e.setFormat(Team.getPlayerTeam(e.getPlayer()).getColor() + "%s " + OlympaPlayerWarfare.get(e.getPlayer()).getGroup().getChatSuffix() + " %s");
+	}
+	
+	@EventHandler
+	public void onRespawn(PlayerRespawnEvent e) {
+		e.setRespawnLocation(tdm.getPlugin().waitRespawnLocation);
+		e.getPlayer().setGameMode(GameMode.SPECTATOR);
 	}
 	
 }

@@ -39,7 +39,6 @@ import fr.olympa.api.utils.Prefix;
 import fr.olympa.api.utils.Utils;
 import fr.olympa.core.spigot.OlympaCore;
 import fr.olympa.warfare.OlympaPlayerWarfare;
-import fr.olympa.warfare.OlympaWarfare;
 import fr.olympa.warfare.classes.WarfareClass;
 import fr.olympa.warfare.teamdeathmatch.GameState;
 import fr.olympa.warfare.teamdeathmatch.TDM;
@@ -111,7 +110,7 @@ public class PlayingGameState extends GameState {
 				}
 				
 				Prefix.BROADCAST.sendMessage(Bukkit.getOnlinePlayers(), "§lLa phase §e§l%s§7§l a débuté !", currentStep.getTitle());
-				currentStep.start(null);
+				currentStep.start(this);
 			}
 			LINE_STEP.updateGlobal();
 		}, 20, 20);
@@ -230,7 +229,7 @@ public class PlayingGameState extends GameState {
 	@EventHandler
 	public void onRespawn(PlayerRespawnEvent e) {
 		Player p = e.getPlayer();
-		e.setRespawnLocation(OlympaWarfare.getInstance().waitRespawnLocation);
+		e.setRespawnLocation(tdm.getPlugin().waitRespawnLocation);
 		p.setGameMode(GameMode.SPECTATOR);
 		OlympaPlayerWarfare player = OlympaPlayerWarfare.get(p);
 		if (player.lives.get() > 0) {

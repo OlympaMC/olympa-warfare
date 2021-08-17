@@ -20,17 +20,25 @@ public class TDMCommand extends ComplexCommand {
 		super(tdm.getPlugin(), "tdm", "Gère la partie de TDM.", WarfarePermissions.TDM_COMMAND_MANAGE);
 		
 		this.tdm = tdm;
+		
+		addArgumentParser("TEAM", Team.class);
 	}
 	
-	@Cmd (min = 1, syntax = "<state>", args = "waiting|class|waitplaying|playing|end")
+	@Cmd (args = "TEAM")
+	public void finish(CommandContext cmd) {
+		tdm.setState(x -> new EndGameState(x, cmd.getArgument(0, null)));
+	}
+	
+	@Cmd (min = 1, syntax = "<state>", args = "waiting|class|waitplaying|playing")
 	public void setState(CommandContext cmd) {
-		Class<? extends GameState> clazz = switch (cmd.<String>getArgument(0)) {
+		String type = cmd.getArgument(0);
+		
+		Class<? extends GameState> clazz = switch (type) {
 		
 		case "waiting" -> WaitingGameState.class;
 		case "class" -> ChooseClassGameState.class;
 		case "waitplaying" -> WaitPlayingGameState.class;
 		case "playing" -> PlayingGameState.class;
-		case "end" -> EndGameState.class;
 		default -> null;
 		
 		};
@@ -42,9 +50,9 @@ public class TDMCommand extends ComplexCommand {
 		
 		try {
 			Constructor<? extends GameState> constructor = clazz.getDeclaredConstructor(TDM.class);
-			tdm.setState(tdm -> {
+			tdm.setState(x -> {
 				try {
-					return constructor.newInstance(tdm);
+					return constructor.newInstance(x);
 				}catch (ReflectiveOperationException ex) {
 					ex.printStackTrace();
 				}
