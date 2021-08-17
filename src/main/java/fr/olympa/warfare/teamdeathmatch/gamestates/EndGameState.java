@@ -40,7 +40,10 @@ public class EndGameState extends GameState {
 	public EndGameState(TDM tdm, Team winning) {
 		super(tdm);
 		this.winning = winning;
-		LINE_TITLE = new BlinkingLine<>((color, x) -> color + "Victoire de\n" + color + "l'" + winning.getName() + color + "!", tdm.getPlugin(), 40, ChatColor.GOLD, ChatColor.YELLOW);
+		if (winning == null)
+			LINE_TITLE = new BlinkingLine<>((color, x) -> color + "§lPartie nulle !", tdm.getPlugin(), 40, ChatColor.RED, ChatColor.DARK_RED);
+		else
+			LINE_TITLE = new BlinkingLine<>((color, x) -> color + "Victoire de\n" + color + "l'" + winning.getName() + color + "!", tdm.getPlugin(), 40, ChatColor.GOLD, ChatColor.YELLOW);
 	}
 	
 	@Override
@@ -50,7 +53,10 @@ public class EndGameState extends GameState {
 			team.getPlayers().forEach(x -> {
 				x.sendTitle(team == winning ? "§6§lVictoire !" : "§cDéfaite...", "§7Félicitations à tous !", 5, 200, 55);
 				x.setGameMode(GameMode.SPECTATOR);
-				Prefix.BROADCAST.sendMessage(x, "§aVictoire de l'%s§a !", winning.getName());
+				if (winning == null)
+					Prefix.BROADCAST.sendMessage(x, "§cPartie nulle...");
+				else
+					Prefix.BROADCAST.sendMessage(x, "§aVictoire de l'%s§a !", winning.getName());
 			});
 		}
 		super.start(from);

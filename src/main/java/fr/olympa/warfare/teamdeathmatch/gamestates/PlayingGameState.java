@@ -42,7 +42,6 @@ import fr.olympa.warfare.OlympaPlayerWarfare;
 import fr.olympa.warfare.OlympaWarfare;
 import fr.olympa.warfare.classes.WarfareClass;
 import fr.olympa.warfare.teamdeathmatch.GameState;
-import fr.olympa.warfare.teamdeathmatch.GameStep;
 import fr.olympa.warfare.teamdeathmatch.TDM;
 import fr.olympa.warfare.teamdeathmatch.Team;
 import fr.olympa.warfare.weapons.WeaponsListener;
@@ -111,13 +110,8 @@ public class PlayingGameState extends GameState {
 					nextStep = null;
 				}
 				
-				if (currentStep == GameStep.GLOWING) {
-					living.forEach(x -> {
-						x.setGlowing(true);
-						x.addPotionEffect(GLOWING_EFFECT);
-					});
-				}
 				Prefix.BROADCAST.sendMessage(Bukkit.getOnlinePlayers(), "§lLa phase §e§l%s§7§l a débuté !", currentStep.getTitle());
+				currentStep.start(null);
 			}
 			LINE_STEP.updateGlobal();
 		}, 20, 20);
@@ -278,6 +272,56 @@ public class PlayingGameState extends GameState {
 			e.getRecipients().removeAll(living);
 			e.setFormat("§7[SPECTATEURS] " + Team.getPlayerTeam(e.getPlayer()).getColor() + "%s §7: %s");
 		}
+	}
+	
+	public enum GameStep {
+		
+		/*SHRINK_1(),
+		SHRINK_2(),*/
+		GLOWING(
+				7 * 60,
+				"Brillance"){
+			@Override
+			public int getWait() {
+				return (int) (Math.ceil(Bukkit.getOnlinePlayers().size() / 2D) * 60);
+			}
+			
+			@Override
+			public void start(PlayingGameState state) {
+				state.living.forEach(x -> {
+					x.setGlowing(true);
+					x.addPotionEffect(GLOWING_EFFECT);
+				});
+			}
+		},
+		AUTO_END(
+				10 * 60,
+				"Annihilation"){
+			@Override
+			public void start(PlayingGameState state) {
+				state.tdm.setState(null);
+			}
+		},
+		;
+		
+		private int wait;
+		private String title;
+		
+		private GameStep(int wait, String title) {
+			this.wait = wait;
+			this.title = title;
+		}
+		
+		public int getWait() {
+			return wait;
+		}
+		
+		public String getTitle() {
+			return title;
+		}
+		
+		public abstract void start(PlayingGameState state);
+		
 	}
 	
 }

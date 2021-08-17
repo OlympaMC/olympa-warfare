@@ -14,7 +14,7 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.scheduler.BukkitTask;
 
 import fr.olympa.api.spigot.lines.FixedLine;
-import fr.olympa.api.spigot.lines.TimerLine;
+import fr.olympa.api.spigot.lines.FixedUpdatableLine;
 import fr.olympa.api.spigot.scoreboard.sign.Scoreboard;
 import fr.olympa.api.utils.Prefix;
 import fr.olympa.warfare.OlympaPlayerWarfare;
@@ -28,19 +28,19 @@ public class WaitingGameState extends GameState {
 	
 	private int countdown = -1;
 	
-	private final TimerLine<Scoreboard<OlympaPlayerWarfare>> LINE_TITLE;
+	private final FixedUpdatableLine<Scoreboard<OlympaPlayerWarfare>> LINE_TITLE;
 	
 	public WaitingGameState(TDM tdm) {
 		super(tdm);
 		tdm.setInGame(false);
 		
-		LINE_TITLE = new TimerLine<>(x -> {
+		LINE_TITLE = new FixedUpdatableLine<>(() -> {
 			if (task == null) {
 				return "§c> En attente de\n§c  joueurs... §7(" + Bukkit.getOnlinePlayers().size() + "/" + tdm.getMinPlayers() + ")";
 			}else {
 				return "§8> §7Début dans\n§a  §l" + countdown + "§7§l secondes §7!";
 			}
-		}, tdm.getPlugin(), 2);
+		});
 	}
 	
 	@Override
@@ -97,13 +97,15 @@ public class WaitingGameState extends GameState {
 		int min = tdm.getMinPlayers();
 		if (online == min) {
 			if (task != null) return;
-			countdown = 30;
+			countdown = 60;
 			task = Bukkit.getScheduler().runTaskTimer(tdm.getPlugin(), () -> {
 				if (countdown == 0) {
 					tdm.setState(ChooseClassGameState::new);
 					task.cancel();
 					task = null;
+					return;
 				}
+				LINE_TITLE.updateGlobal();
 				boolean broadcast = countdown <= 5 || countdown % 10 == 0;
 				if (broadcast) Prefix.BROADCAST.sendMessage(Bukkit.getOnlinePlayers(), "§aLa partie commence dans §l%d§a secondes !", countdown);
 				countdown--;
@@ -123,6 +125,7 @@ public class WaitingGameState extends GameState {
 				task = null;
 				Prefix.BROADCAST.sendMessage(Bukkit.getOnlinePlayers(), "La partie ne peut pas commencer, il y a trop peu de joueurs.");
 			}
+			LINE_TITLE.updateGlobal();
 		}
 	}
 	

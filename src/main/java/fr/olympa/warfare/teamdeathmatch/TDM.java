@@ -76,7 +76,7 @@ public class TDM {
 			}
 		}
 		SpigotUtils.broadcastMessage(Prefix.BROADCAST.formatMessage("Arrêt de ce serveur de jeu..."));
-		Bukkit.shutdown();
+		OlympaCore.getInstance().restartServer(Bukkit.getConsoleSender());
 	}
 	
 	public void setInGame(boolean inGame) {
