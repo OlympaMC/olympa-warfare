@@ -29,6 +29,7 @@ import fr.olympa.warfare.OlympaWarfare;
 import fr.olympa.warfare.classes.ClassListGUI;
 import fr.olympa.warfare.teamdeathmatch.GameState;
 import fr.olympa.warfare.teamdeathmatch.TDM;
+import fr.olympa.warfare.teamdeathmatch.TDMPlayer;
 import fr.olympa.warfare.teamdeathmatch.Team;
 
 public class ChooseClassGameState extends GameState {
@@ -119,7 +120,7 @@ public class ChooseClassGameState extends GameState {
 	
 	@Override
 	protected void handleScoreboard(Scoreboard<OlympaPlayerWarfare> scoreboard) {
-		scoreboard.addLines(FixedLine.EMPTY_LINE, LINE_TITLE, FixedLine.EMPTY_LINE, OlympaPlayerWarfare.LINE_CLASS);
+		scoreboard.addLines(FixedLine.EMPTY_LINE, LINE_TITLE, FixedLine.EMPTY_LINE, TDMPlayer.LINE_CLASS);
 	}
 	
 	@EventHandler (priority = EventPriority.HIGHEST)
@@ -129,6 +130,7 @@ public class ChooseClassGameState extends GameState {
 			if (min == null || team.getPlayers().size() < min.getPlayers().size()) min = team;
 		}
 		min.addPlayer(e.getPlayer());
+		tdm.teamChanged(e.getPlayer(), false);
 		playerInventory(e.getPlayer());
 	}
 	

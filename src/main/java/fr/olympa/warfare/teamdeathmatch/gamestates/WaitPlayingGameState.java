@@ -17,6 +17,7 @@ import fr.olympa.warfare.OlympaWarfare;
 import fr.olympa.warfare.classes.WarfareClass;
 import fr.olympa.warfare.teamdeathmatch.GameState;
 import fr.olympa.warfare.teamdeathmatch.TDM;
+import fr.olympa.warfare.teamdeathmatch.TDMPlayer;
 import fr.olympa.warfare.teamdeathmatch.Team;
 
 public class WaitPlayingGameState extends GameState {
@@ -38,7 +39,7 @@ public class WaitPlayingGameState extends GameState {
 		for (Team team : Team.values()) {
 			team.getPlayers().forEach(x -> {
 				x.teleport(team.getSpawnpoints().get(0)); // avant super.start() comme ça le move n'est pas cancel
-				OlympaPlayerWarfare player = OlympaPlayerWarfare.get(x);
+				TDMPlayer player = tdm.getPlayer(x);
 				if (player.usedClass.isEmpty()) {
 					player.usedClass.set(defaultKit);
 					Prefix.DEFAULT.sendMessage(x, "La classe %s t'as été donnée par défaut.", defaultKit.getName());
@@ -65,7 +66,7 @@ public class WaitPlayingGameState extends GameState {
 	
 	@Override
 	protected void handleScoreboard(Scoreboard<OlympaPlayerWarfare> scoreboard) {
-		scoreboard.addLines(FixedLine.EMPTY_LINE, LINE_TITLE, OlympaPlayerWarfare.LINE_CLASS);
+		scoreboard.addLines(FixedLine.EMPTY_LINE, LINE_TITLE, TDMPlayer.LINE_CLASS);
 	}
 	
 	@EventHandler (priority = EventPriority.HIGHEST)

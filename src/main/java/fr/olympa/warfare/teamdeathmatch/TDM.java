@@ -1,10 +1,16 @@
 package fr.olympa.warfare.teamdeathmatch;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.spigotmc.SpigotConfig;
 
 import fr.olympa.api.common.player.OlympaPlayer;
@@ -18,7 +24,7 @@ import fr.olympa.warfare.OlympaPlayerWarfare;
 import fr.olympa.warfare.OlympaWarfare;
 import fr.olympa.warfare.teamdeathmatch.gamestates.WaitingGameState;
 
-public class TDM {
+public class TDM implements Listener {
 	
 	private final OlympaWarfare plugin;
 	
@@ -28,12 +34,17 @@ public class TDM {
 	private ServerStatus defaultStatus;
 	private boolean inGame = false;
 	
+	private Map<Player, TDMPlayer> players = new HashMap<>();
+	
 	public TDM(OlympaWarfare plugin, int minPlayers) {
 		this.plugin = plugin;
 		this.minPlayers = minPlayers;
+		
+		Bukkit.getPluginManager().registerEvents(this, plugin);
+		Bukkit.getOnlinePlayers().forEach(x -> players.put(x, new TDMPlayer(x)));
+		
 		setState(WaitingGameState::new);
 		SpigotConfig.disablePlayerDataSaving = true;
-		//ukkit.getWorld("world").getWorldBorder().setSize(500);
 		
 		OlympaCore.getInstance().getNameTagApi().addNametagHandler(EventPriority.HIGHEST, new NametagHandler() {
 			@Override
@@ -89,6 +100,14 @@ public class TDM {
 		}
 	}
 	
+	public Map<Player, TDMPlayer> getPlayers() {
+		return players;
+	}
+	
+	public TDMPlayer getPlayer(Player player) {
+		return players.get(player);
+	}
+	
 	public boolean isInGame() {
 		return inGame;
 	}
@@ -98,7 +117,22 @@ public class TDM {
 	}
 	
 	public void teamChanged(Player p) {
-		OlympaCore.getInstance().getNameTagApi().callNametagUpdate(OlympaPlayerWarfare.get(p));
+		teamChanged(p, true);
+	}
+	
+	public void teamChanged(Player p, boolean updateTag) {
+		if (updateTag) OlympaCore.getInstance().getNameTagApi().callNametagUpdate(OlympaPlayerWarfare.get(p));
+		getPlayer(p).team = Team.getPlayerTeam(p);
+	}
+	
+	@EventHandler (priority = EventPriority.LOWEST)
+	public void onJoin(PlayerJoinEvent e) {
+		players.put(e.getPlayer(), new TDMPlayer(e.getPlayer()));
+	}
+	
+	@EventHandler
+	public void onQuit(PlayerQuitEvent e) {
+		players.remove(e.getPlayer());
 	}
 	
 }

@@ -58,6 +58,12 @@ public class EndGameState extends GameState {
 					Prefix.BROADCAST.sendMessage(x, "§cPartie nulle...");
 				else
 					Prefix.BROADCAST.sendMessage(x, "§aVictoire de l'%s§a !", winning.getName());
+				
+				OlympaPlayerWarfare player = OlympaPlayerWarfare.get(x);
+				if (team == winning) {
+					Prefix.DEFAULT_GOOD.sendMessage(x, "Tu remportes 10 XP en remportant cette partie !");
+					player.setXP(player.getXP() + 10);
+				}
 			});
 		}
 		super.start(from);

@@ -31,7 +31,7 @@ public class ClassListGUI extends PagedGUI<WarfareClass> {
 		if (false && existing.getMinLevel() > player.getLevel()) {
 			Prefix.DEFAULT_BAD.sendMessage(p, "Tu n'as pas le niveau requis pour prendre cette classe.");
 		}else {
-			player.usedClass.set(existing);
+			player.tdmPlayer.usedClass.set(existing);
 			Prefix.ERROR.sendMessage(p, "Les niveaux des classes sont temporairement désactivés.");
 			Prefix.DEFAULT_GOOD.sendMessage(p, "Tu as sélectionné la classe %s.", existing.getName());
 		}

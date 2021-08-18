@@ -4,9 +4,7 @@ import java.text.DecimalFormat;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.StringJoiner;
 
 import org.bukkit.Bukkit;
@@ -42,6 +40,7 @@ import fr.olympa.warfare.OlympaPlayerWarfare;
 import fr.olympa.warfare.classes.WarfareClass;
 import fr.olympa.warfare.teamdeathmatch.GameState;
 import fr.olympa.warfare.teamdeathmatch.TDM;
+import fr.olympa.warfare.teamdeathmatch.TDMPlayer;
 import fr.olympa.warfare.teamdeathmatch.Team;
 import fr.olympa.warfare.weapons.WeaponsListener;
 
@@ -53,8 +52,6 @@ public class PlayingGameState extends GameState {
 
 	private List<Player> living = new ArrayList<>();
 	private List<Team> going = new ArrayList<>();
-	
-	private Map<Player, BukkitTask> inRespawn = new HashMap<>();
 	
 	private final DynamicLine<Scoreboard<OlympaPlayerWarfare>> LINE_TEAM;
 	private final FixedUpdatableLine<Scoreboard<OlympaPlayerWarfare>> LINE_STEP;
@@ -72,13 +69,13 @@ public class PlayingGameState extends GameState {
 		LINE_TEAM = new DynamicLine<>(x -> Team.getPlayerTeam((Player) x.getOlympaPlayer().getPlayer()).getName());
 		LINE_STEP = new FixedUpdatableLine<>(() -> {
 			StringJoiner joiner = new StringJoiner("\n");
-			if (currentStep != null) {
-				joiner.add("§7Phase en cours:");
-				joiner.add("§6 §l§n" + currentStep.getTitle());
-			}
 			if (nextStep != null) {
 				joiner.add("§7Prochaine phase:");
 				joiner.add("§6 §l" + nextStep.getTitle() + "§e (" + Utils.durationToString(format, nextStepSeconds * 1000, false) + ")");
+			}
+			if (currentStep != null) {
+				joiner.add("§7Phase en cours:");
+				joiner.add("§6 §l§n" + currentStep.getTitle());
 			}
 			return joiner.toString();
 		});
@@ -95,8 +92,7 @@ public class PlayingGameState extends GameState {
 		living.addAll(Bukkit.getOnlinePlayers());
 		going.addAll(Arrays.asList(Team.values()));
 		OlympaCore.getInstance().getNameTagApi().addNametagHandler(EventPriority.HIGH, (nametag, player, to) -> {
-			OlympaPlayerWarfare p = (OlympaPlayerWarfare) player;
-			nametag.appendSuffix(p.getLivesString());
+			nametag.appendSuffix(((OlympaPlayerWarfare) player).tdmPlayer.getLivesString());
 		});
 		living.forEach(x -> OlympaCore.getInstance().getNameTagApi().callNametagUpdate(OlympaPlayerWarfare.get(x)));
 		
@@ -119,7 +115,7 @@ public class PlayingGameState extends GameState {
 	@Override
 	public void stop() {
 		super.stop();
-		inRespawn.values().forEach(BukkitTask::cancel);
+		tdm.getPlayers().values().forEach(TDMPlayer::cancelRespawn);
 		task.cancel();
 	}
 	
@@ -143,7 +139,7 @@ public class PlayingGameState extends GameState {
 	
 	@Override
 	protected void handleScoreboard(Scoreboard<OlympaPlayerWarfare> scoreboard) {
-		scoreboard.addLines(FixedLine.EMPTY_LINE, LINE_TEAM, FixedLine.EMPTY_LINE, OlympaPlayerWarfare.LINE_LIVES, OlympaPlayerWarfare.LINE_CLASS, FixedLine.EMPTY_LINE, LINE_STEP);
+		scoreboard.addLines(FixedLine.EMPTY_LINE, LINE_TEAM, FixedLine.EMPTY_LINE, TDMPlayer.LINE_LIVES, TDMPlayer.LINE_CLASS, FixedLine.EMPTY_LINE, LINE_STEP);
 	}
 	
 	@Override
@@ -172,14 +168,15 @@ public class PlayingGameState extends GameState {
 		boolean legitKill = false;
 		
 		OlympaPlayerWarfare deadOP = OlympaPlayerWarfare.get(dead);
-		deadOP.lives.decrement();
+		deadOP.tdmPlayer.lives.decrement();
 		Team team = Team.getPlayerTeam(dead);
+		int lives = deadOP.tdmPlayer.lives.get();
 		if (killer != null) {
-			WarfareClass deadKit = deadOP.usedClass.get();
+			WarfareClass deadKit = deadOP.tdmPlayer.usedClass.get();
 			OlympaPlayerWarfare killerOP = OlympaPlayerWarfare.get(killer);
 			WarfareClass killerKit = null;
 			if (killerOP != null)
-				killerKit = killerOP.usedClass.get();
+				killerKit = killerOP.tdmPlayer.usedClass.get();
 			if (deadKit != null && killerKit != null) {
 				
 				double xpGain = 1;
@@ -193,19 +190,20 @@ public class PlayingGameState extends GameState {
 				Prefix.DEFAULT_GOOD.sendMessage(killer, "§eTu gagnes §6§l%s xp§e !", format.format(xpGain));
 				killerOP.setXP(killerOP.getXP() + xpGain);
 				killerOP.getKills().increment();
+				killerOP.tdmPlayer.points.add(3);
 				
 				boolean afar = dead.getLastDamageCause().getCause() == DamageCause.PROJECTILE;
-				e.setDeathMessage("§c☠ " + team.getColor() + "§l" + dead.getName() + "§c (" + deadKit.getName() + ") §7" + (afar ? "🏹" : "⚔") + " §4§l" + killer.getName() + "§4 (" + killerKit.getName() + ") §7~ " + deadOP.lives.get() + "§c❤");
+				e.setDeathMessage("§c☠ " + team.getColor() + "§l" + dead.getName() + "§c (" + deadKit.getName() + ") §7" + (afar ? "🏹" : "⚔") + " §4§l" + killer.getName() + "§4 (" + killerKit.getName() + ") §7~ " + lives + "§c❤");
 				legitKill = true;
 			}
 			
 		}
-		if (!legitKill) e.setDeathMessage("§c☠ " + team.getColor() + "§l" + dead.getName() + "§7 est mort. ~ " + deadOP.lives.get() + " §c❤");
+		if (!legitKill) e.setDeathMessage("§c☠ " + team.getColor() + "§l" + dead.getName() + "§7 est mort. ~ " + lives + " §c❤");
 		
 		e.setDroppedExp(0);
 		e.getDrops().clear();
 		
-		if (deadOP.lives.get() > 0) {
+		if (lives > 0) {
 			e.setKeepInventory(true);
 			
 			Prefix.DEFAULT.sendMessage(dead, "Tu es mort...");
@@ -231,22 +229,19 @@ public class PlayingGameState extends GameState {
 		Player p = e.getPlayer();
 		e.setRespawnLocation(tdm.getPlugin().waitRespawnLocation);
 		p.setGameMode(GameMode.SPECTATOR);
-		OlympaPlayerWarfare player = OlympaPlayerWarfare.get(p);
+		TDMPlayer player = tdm.getPlayer(p);
 		if (player.lives.get() > 0) {
 			Team team = Team.getPlayerTeam(p);
-			inRespawn.put(p, Bukkit.getScheduler().runTaskTimer(tdm.getPlugin(), new @NotNull Runnable() {
+			player.respawn = Bukkit.getScheduler().runTaskTimer(tdm.getPlugin(), new @NotNull Runnable() {
 				int countdown = 5;
 				
 				@Override
 				public void run() {
 					if (--countdown == 0) {
-						inRespawn.remove(p).cancel();
+						player.cancelRespawn();
 						p.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 6 * 20, 0, false, false, true));
 						if (currentStep == GameStep.GLOWING) p.addPotionEffect(GLOWING_EFFECT);
-						List<Location> other = new ArrayList<>();
-						for (Team otherTeam : Team.values()) {
-							if (team != otherTeam) other.addAll(otherTeam.getPlayers().stream().filter(x -> !inRespawn.containsKey(x)).map(Player::getLocation).toList());
-						}
+						List<Location> other = tdm.getPlayers().values().stream().filter(x -> x.team != team && x.respawn != null).map(x -> x.getPlayer().getLocation()).toList();
 						p.teleport(team.getSpawnpoints().stream().map(spawnpoint -> {
 							int minDistance = 10000;
 							for (Location otherPlayer : other) {
@@ -258,7 +253,7 @@ public class PlayingGameState extends GameState {
 						p.setGameMode(GameMode.ADVENTURE);
 					}else p.sendTitle("§cTu es mort", "§7Respawn dans §c§l" + countdown + " secondes§7...", 0, 20, 2);
 				}
-			}, 0, 20));
+			}, 0, 20);
 		}
 	}
 	
