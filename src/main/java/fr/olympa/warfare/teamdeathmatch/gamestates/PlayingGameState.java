@@ -132,7 +132,7 @@ public class PlayingGameState extends GameState {
 			going.remove(team);
 			SpigotUtils.broadcastMessage("§4§lL'" + team.getName() + "§4 est éliminée !");
 			if (going.size() <= 1) {
-				tdm.setState(tdm -> new EndGameState(tdm, going.get(0)));
+				tdm.setState(tdm -> new EndGameState(tdm, going.isEmpty() ? null : going.get(0)));
 			}
 		}
 	}
@@ -152,9 +152,13 @@ public class PlayingGameState extends GameState {
 				other = x;
 			}
 			if (other != null) {
-				Team otherTeam = Team.getPlayerTeam(other);
-				Team team = Team.getPlayerTeam(p);
-				return otherTeam == team || other.hasPotionEffect(PotionEffectType.INVISIBILITY) || p.hasPotionEffect(PotionEffectType.INVISIBILITY);
+				TDMPlayer otherTDM = tdm.getPlayer(other);
+				TDMPlayer thisTDM = tdm.getPlayer(p);
+				boolean cancel = otherTDM.team == thisTDM.team || other.hasPotionEffect(PotionEffectType.INVISIBILITY) || p.hasPotionEffect(PotionEffectType.INVISIBILITY);
+				if (!cancel) {
+					thisTDM.damagesDealt.asMap().merge(otherTDM, e.getFinalDamage(), (d1, d2) -> d1 + d2);
+				}
+				return cancel;
 			}
 		}
 		return false;
@@ -169,7 +173,7 @@ public class PlayingGameState extends GameState {
 		
 		OlympaPlayerWarfare deadOP = OlympaPlayerWarfare.get(dead);
 		deadOP.tdmPlayer.lives.decrement();
-		Team team = Team.getPlayerTeam(dead);
+		Team team = deadOP.tdmPlayer.team;
 		int lives = deadOP.tdmPlayer.lives.get();
 		if (killer != null) {
 			WarfareClass deadKit = deadOP.tdmPlayer.usedClass.get();
@@ -195,11 +199,20 @@ public class PlayingGameState extends GameState {
 				boolean afar = dead.getLastDamageCause().getCause() == DamageCause.PROJECTILE;
 				e.setDeathMessage("§c☠ " + team.getColor() + "§l" + dead.getName() + "§c (" + deadKit.getName() + ") §7" + (afar ? "🏹" : "⚔") + " §4§l" + killer.getName() + "§4 (" + killerKit.getName() + ") §7~ " + lives + "§c❤");
 				legitKill = true;
+				
+				deadOP.tdmPlayer.damagesDealt.invalidate(killerOP.tdmPlayer);
 			}
 			
 		}
 		if (!legitKill) e.setDeathMessage("§c☠ " + team.getColor() + "§l" + dead.getName() + "§7 est mort. ~ " + lives + " §c❤");
 		
+		deadOP.tdmPlayer.damagesDealt.cleanUp();
+		for (TDMPlayer assistant : deadOP.tdmPlayer.damagesDealt.asMap().keySet()) {
+			assistant.points.add(1);
+			Prefix.DEFAULT.sendMessage(assistant.getPlayer(), "Tu gagnes 1 point en ayant aidé au kill de %s.", deadOP.getName());
+		}
+		deadOP.tdmPlayer.damagesDealt.invalidateAll();
+
 		e.setDroppedExp(0);
 		e.getDrops().clear();
 		
@@ -231,7 +244,7 @@ public class PlayingGameState extends GameState {
 		p.setGameMode(GameMode.SPECTATOR);
 		TDMPlayer player = tdm.getPlayer(p);
 		if (player.lives.get() > 0) {
-			Team team = Team.getPlayerTeam(p);
+			Team team = player.team;
 			player.respawn = Bukkit.getScheduler().runTaskTimer(tdm.getPlugin(), new @NotNull Runnable() {
 				int countdown = 5;
 				

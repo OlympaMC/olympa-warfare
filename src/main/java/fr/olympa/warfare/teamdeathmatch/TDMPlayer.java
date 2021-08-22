@@ -1,7 +1,12 @@
 package fr.olympa.warfare.teamdeathmatch;
 
+import java.util.concurrent.TimeUnit;
+
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
+
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 
 import fr.olympa.api.common.observable.ObservableInt;
 import fr.olympa.api.common.observable.ObservableValue;
@@ -27,6 +32,8 @@ public class TDMPlayer {
 	public Team team = null;
 	public boolean isLiving = true;
 	public BukkitTask respawn = null;
+	
+	public Cache<TDMPlayer, Double> damagesDealt = CacheBuilder.newBuilder().maximumSize(3).expireAfterWrite(15, TimeUnit.SECONDS).build();
 	
 	public TDMPlayer(Player player) {
 		this.player = player;
