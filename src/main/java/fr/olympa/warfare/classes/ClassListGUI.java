@@ -7,18 +7,18 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
 
-import fr.olympa.api.spigot.gui.templates.PagedGUI;
+import fr.olympa.api.spigot.gui.OlympaGUI;
+import fr.olympa.api.spigot.gui.templates.PagedView;
 import fr.olympa.api.utils.Prefix;
 import fr.olympa.warfare.OlympaPlayerWarfare;
 
-public class ClassListGUI extends PagedGUI<WarfareClass> {
+public class ClassListGUI extends PagedView<WarfareClass> {
 	
 	private OlympaPlayerWarfare player;
 	
 	public ClassListGUI(OlympaPlayerWarfare player) {
-		super("Choisissez votre classe", DyeColor.RED, Arrays.asList(WarfareClass.values()), 2, false);
+		super(DyeColor.RED, Arrays.asList(WarfareClass.values()));
 		this.player = player;
-		setItems();
 	}
 	
 	@Override
@@ -35,6 +35,10 @@ public class ClassListGUI extends PagedGUI<WarfareClass> {
 			Prefix.ERROR.sendMessage(p, "Les niveaux des classes sont temporairement désactivés.");
 			Prefix.DEFAULT_GOOD.sendMessage(p, "Tu as sélectionné la classe %s.", existing.getName());
 		}
+	}
+	
+	public OlympaGUI toGUI() {
+		return super.toGUI("Choisissez votre classe", 2);
 	}
 	
 }

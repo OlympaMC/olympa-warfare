@@ -109,7 +109,7 @@ public class ChooseClassGameState extends GameState {
 		PlayerInventory inventory = p.getInventory();
 		inventory.clear();
 		inventory.setItem(4, ItemUtils.item(Material.NETHER_STAR, "§bChoisis ta classe"));
-		new ClassListGUI(OlympaPlayerWarfare.get(p)).create(p);
+		new ClassListGUI(OlympaPlayerWarfare.get(p)).toGUI().create(p);
 	}
 	
 	@Override
@@ -152,7 +152,7 @@ public class ChooseClassGameState extends GameState {
 		if (e.getItem() == null) return;
 		Player p = e.getPlayer();
 		if (p.getInventory().getHeldItemSlot() == 4) {
-			new ClassListGUI(OlympaPlayerWarfare.get(p)).create(p);
+			new ClassListGUI(OlympaPlayerWarfare.get(p)).toGUI().create(p);
 			e.setCancelled(true);
 		}
 	}
